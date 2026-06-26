@@ -61,6 +61,21 @@ print(data.summary())
 """),
 
     md(r"""
+### Current paired bag
+
+Authoritative Smart Distance per club (from Arccos's v6 endpoint), filtered
+to currently-paired sensors only. The puller's `clubs.csv` mixes in retired
+clubs; this view doesn't.
+"""),
+
+    code(r"""
+bag_view = data.paired_bag[["label", "make", "model",
+                            "smart_distance_yd", "longest_yd"]].copy()
+bag_view.columns = ["Club", "Make", "Model", "Smart Distance (yd)", "Longest (yd)"]
+bag_view
+"""),
+
+    md(r"""
 ## 1. Strokes gained by category over time
 
 Each row in `rounds_summary.csv` carries Arccos's measured SG vs scratch for
@@ -113,9 +128,10 @@ on-course median next to your launch-monitor median and the forecasted target.
 
     code(r"""
 def per_club_distance(shots: pd.DataFrame, min_count: int = 6) -> pd.DataFrame:
-    # Per-club shot-distance stats from Arccos shots.csv.
-    # Filters out putts and zero-distance rows. min_count guards against clubs
-    # used so rarely they do not generalize (5+ per upstream README).
+    # Per-club shot-distance stats from Arccos shots.csv (TOTAL distance,
+    # not carry — includes roll/bounce). Filters out putts and zero-distance
+    # rows. min_count guards against clubs used so rarely they do not
+    # generalize (5+ per upstream README).
     s = shots[~shots["is_putt"].astype(bool) & (shots["shot_distance_yd"] > 0)]
     g = s.groupby("club")["shot_distance_yd"]
     out = pd.DataFrame({
@@ -128,41 +144,41 @@ def per_club_distance(shots: pd.DataFrame, min_count: int = 6) -> pd.DataFrame:
     out = out[out["shots"] >= min_count].sort_values("median", ascending=False)
     return out
 
-clubs_on_course = per_club_distance(data.shots)
+clubs_on_course = per_club_distance(data.shots_in_bag())
 clubs_on_course
 """),
 
     code(r"""
-# Side-by-side with your forecast and GC3 measured (where available).
-# The forecast CSV was built by forecast_club_distances.py (see repo root).
-try:
-    forecast = pd.read_csv("realistic_club_distances.csv")
-    # Map forecast labels (e.g. "7i (33 deg)") to Arccos labels (e.g. "7 Iron").
-    label_map = {
-        "Dr": "Driver", "3w": "3 Wood", "3h": "Hybrid", "4h": "Hybrid",
-        "5i": "5 Iron", "6i": "6 Iron", "7i": "7 Iron", "8i": "8 Iron",
-        "9i": "9 Iron", "PW": "Pitching Wedge",
-    }
-    forecast["arccos_club"] = forecast["Club"].str.split(" ").str[0].map(label_map)
-    f = forecast.dropna(subset=["arccos_club"]).set_index("arccos_club")
-    comp = clubs_on_course.join(f[["Carry now (yd)", "Carry target (yd)"]], how="left")
-    comp = comp.rename(columns={"median": "On-course median",
-                                "Carry now (yd)": "Forecast (anchored to GC3)",
-                                "Carry target (yd)": "Achievable target"})
-    comp["Delta vs forecast"] = (comp["On-course median"] - comp["Forecast (anchored to GC3)"]).round(0)
-    display_cols = ["shots", "On-course median", "Forecast (anchored to GC3)",
-                    "Delta vs forecast", "Achievable target", "80% band"]
-    comp[display_cols]
-except FileNotFoundError:
-    print("realistic_club_distances.csv not found — run forecast_club_distances.py first.")
-    clubs_on_course
+# Side-by-side: on-course p80 vs Arccos Smart Distance (authoritative).
+# Smart Distance is total (carry + roll); shot-distance median is also total,
+# so these are comparable units.
+bag = data.paired_bag.copy()
+bag = bag.dropna(subset=["smart_distance_yd"])
+# Join via shots_csv_label (the puller's label that appears in shots.csv)
+# rather than the user-friendly display label.
+bag = bag.set_index("shots_csv_label")
+comp = clubs_on_course.join(
+    bag[["label", "smart_distance_yd", "longest_yd"]],
+    how="left"
+)
+comp = comp.rename(columns={
+    "label": "Display name",
+    "smart_distance_yd": "Smart Distance (yd)",
+    "longest_yd": "Longest (yd)",
+    "median": "Shots median (yd)",
+    "p80": "Shots p80 (yd)",
+})
+comp = comp[["Display name", "shots", "Smart Distance (yd)", "Shots p80 (yd)",
+             "Shots median (yd)", "Longest (yd)", "80% band"]]
+comp
 """),
 
     md(r"""
-**How to read this**: a negative `Delta vs forecast` means on-course is shorter
-than the GC3-anchored forecast — totally normal (lies, weather, less than 100%
-swings). A wide `80% band` means dispersion is hurting you on that club; a narrow
-band means you trust it. Compare across clubs to find the unreliable ones.
+**How to read this**: `Smart Distance` is what the Arccos app shows — bias-
+corrected toward well-struck shots, what to plan around. `Shots p80` is the
+recent 80th-percentile from raw shots, useful as a sanity check. `Shots
+median` will be lower because mis-hits drag it down. A wide `80% band` means
+dispersion is hurting you on that club; a narrow band means you trust it.
 """),
 
     md(r"""
@@ -177,8 +193,8 @@ Two questions:
 """),
 
     code(r"""
-# 3a. Tee-club selection
-tee_shots = data.shots[data.shots["is_tee"].astype(bool)].copy()
+# 3a. Tee-club selection (filtered to currently-paired clubs only)
+tee_shots = data.shots_in_bag()[data.shots_in_bag()["is_tee"].astype(bool)].copy()
 tee_club_sg = (tee_shots.groupby("club")
                .agg(shots=("sg_shot_approx", "size"),
                     avg_sg=("sg_shot_approx", "mean"),
@@ -192,8 +208,9 @@ tee_club_sg
 
     code(r"""
 # 3b. Approach SG by distance bucket. Pin distance at shot start is what matters.
-approach_shots = data.shots[(data.shots["category_approx"] == "approach") &
-                            (data.shots["start_dist_to_pin_yd"].notna())].copy()
+sib = data.shots_in_bag()
+approach_shots = sib[(sib["category_approx"] == "approach") &
+                     (sib["start_dist_to_pin_yd"].notna())].copy()
 buckets = [0, 50, 75, 100, 125, 150, 175, 200, 250, 999]
 labels = ["<50", "50-75", "75-100", "100-125", "125-150",
           "150-175", "175-200", "200-250", "250+"]

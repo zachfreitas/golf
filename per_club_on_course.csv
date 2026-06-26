@@ -1,14 +1,14 @@
-Club,On-course p80 (yd),Source,GC3 carry (yd),Range vs course,Gap to next (yd)
-Dr (10.5 deg),212,Arccos last 12mo (n=87),,, 18
-3w (15 deg),194,Arccos last 12mo (n=25),,, 26  [WIDE]
-3h (19 deg),168,Arccos last 12mo (n=33),,, 12
-4h (22 deg),156,Arccos last 12mo (n=20),,,  8
-5i (25.5 deg),148,Arccos last 12mo (n=9),,,  8
-6i (29 deg),140,Arccos last 12mo (n=21),,, 20  [WIDE]
-7i (33 deg),120,Arccos last 12mo (n=14),127,+7,  3  [TIGHT]
-8i (37 deg),117,Arccos last 12mo (n=20),,,  9
-9i (41 deg),108,Arccos last 12mo (n=12),,, -4  [TIGHT]
-PW (46 deg),112,Arccos last 12mo (n=5),,, 36  [WIDE]
-GW (52 deg),76,forecast,,, 14
-SW (56 deg),62,forecast,,, 13
-LW (60 deg),49,forecast,,,
+Club,Make/Model,Smart Distance (yd),Longest (yd),Recent p80 (yd),n (last 12mo),Gap to next (yd)
+Driver,TaylorMade Qi10,217,253,212,87, 19  [WIDE]
+3 Wood,TaylorMade Qi10,198,225,194,25, 16
+3 Hybrid,TaylorMade Qi10,182,227,168,33, 15
+Hybrid,TaylorMade Qi10,166,188,156,20, 13
+5 Iron,TaylorMade P∙770,153,160,148,9, 12
+6 Iron,TaylorMade P∙770,141,170,140,21, 11
+7 Iron,TaylorMade P∙770,129,144,120,14,  4  [TIGHT]
+8 Iron,TaylorMade P∙770,124,136,117,20, 16
+9 Iron,TaylorMade P∙770,108,133,108,12,  0  [TIGHT]
+Pitching Wedge,TaylorMade P∙770,107,127,112,5, 24  [WIDE]
+Wedge,TaylorMade MG4,83,126,52,91, 17
+Wedge,TaylorMade MG4,65,96,52,91, 19  [WIDE]
+Wedge,TaylorMade MG4,46,93,52,91,

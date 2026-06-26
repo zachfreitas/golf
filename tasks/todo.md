@@ -5,24 +5,46 @@ Live worklist for the project. Mark items `[x]` when shipped.
 ## Done
 
 - [x] Initialize git, push existing GC3 work to https://github.com/zachfreitas/golf
-- [x] Forecast realistic per-club distances anchored to measured 7i (74.8 mph → 127 yd)
 - [x] Install `chrisdecali/golf-reports` and complete first Arccos sync (50 rounds, 3012 shots)
 - [x] Build `arccos/loader.py` and `Arccos_Course_Analysis.ipynb` (4 sections)
-- [x] Write `docs/USER_GUIDE.md` (comprehensive single doc per CLAUDE.md convention)
+- [x] Write `docs/USER_GUIDE.md` (comprehensive single doc)
+- [x] Discover & document Arccos `isPaired` flag; loader now surfaces `paired_bag` from `_cache_raw/clubs_v6.json`
+- [x] Correct clubType → label mapping (clubType 35 = 3 Hybrid; not in puller's CLUBTYPE map)
+- [x] Recalibrate `forecast_club_distances.py` to use Smart Distance as the primary source with last-12-mo p80 cross-check
+- [x] Document distance-metric distinctions (median vs p80 vs Smart Distance vs GC3 carry vs total) in USER_GUIDE §7
+- [x] Diagnose loft-vs-swing question: distance progression issues at 7i/8i/PW are SWING-related, not loft-related → NO loft adjustments recommended
+
+## Decisions reached
+
+- **Don't** drop the 4-hybrid or the 5-iron. Both doing real work (Smart Distance 166 / 153, 12-13 yd gap). The "overlap" call earlier was based on raw shot medians, which were misleading.
+- **Drop the 9-iron.** Smart Distance 108 vs PW 107 — true 1-yd overlap. PW wins on spin / stopping power.
+- **Don't add an 11-wood.** Loft (~29°) overlaps with existing 6-iron (29°) which is the user's most-efficient iron.
+- **Don't add a 50° wedge** (user veto, even though it'd fix the PW→GW 24-yd gap textbook-style).
+- **9-wood (~25° loft) is a defensible add** if replacing the 4-hybrid 1-for-1 for trajectory/forgiveness. But analysis says no bag move is needed before fixing iron contact.
+- **No loft adjustments to irons.** Lofts are ~stock P770; progression is healthy. The 7i/8i/PW clustering is a contact-quality issue, not a loft issue.
 
 ## Open
 
-- [ ] Capture measured **driver** swing speed on the GC3 (currently forecast at 84.8 mph, untested)
-- [ ] Capture measured **3W, hybrid, wedge** swing speeds (forecast accuracy degrades away from the 7i anchor)
-- [ ] Decide on the **4H vs 5i overlap** (both forecast 143 yd carry; possibly drop one or bend a loft)
-- [ ] Investigate the **PW → GW gap of 15 yd** — is a 50° wedge worth adding?
-- [ ] Compare measured-on-course **125-150 yd approach SG (-0.42 / shot, n=175)** against range smash on 7i / 8i — biggest single leak in the bag
+### Bag
+- [ ] Decide whether to drop the 9-iron (recommended). One-time decision; no cost.
+- [ ] Capture measured **driver** swing speed on the GC3 (currently estimated at 84 mph from Book1)
+- [ ] Capture measured **3W, hybrid, wedge** swing speeds — top + bottom of bag are the least confident in the forecast
+- [ ] Per-wedge gapping session with launch monitor — three MG4 wedges share generic `Wedge` label in shots.csv, so per-wedge p80 isn't disambiguated by Arccos data alone
+
+### Practice priorities (in order of stroke ROI)
+- [ ] **7i / 8i strike improvement on the GC3.** Lift smash 1.31 → 1.35 to attack the 125-150 yd approach SG leak (−0.42 SG/shot, biggest single bleed at ~73 strokes over 50 rounds)
+- [ ] Consider lessons specifically targeting iron contact + spin (current 7i spin 4924 vs target 6500-7500)
+
+### Upstream / tooling
+- [ ] Open upstream PR on `chrisdecali/golf-reports` for the `None`-hole patches in `pull_arccos.py` (lines 530, 637)
+- [ ] Open upstream PR adding clubType 35 to `CLUBTYPE` map (and any other types we discover) — currently surfaces as "Club 35" in shots.csv
+
+### Analysis
+- [ ] Update `Arccos_Course_Analysis.ipynb` to use the new `paired_bag` + `shots_in_bag()` filters so the notebook automatically excludes retired-club shots
 - [ ] Track per-round SG totals in a weekly rolling chart once `>5` rounds played in 2026
-- [ ] Open upstream PR on `chrisdecali/golf-reports` for the `None` hole patch in `pull_arccos.py` (lines 530, 637)
+- [ ] Course-specific analysis once enough rounds played per course (Twin Oaks GC dominates the dataset)
 
 ## Maybe later
 
 - [ ] Auto-pull Arccos via cron / Windows Task Scheduler after each round
-- [ ] Side-by-side range vs course dispersion chart (one per club)
-- [ ] Course-specific analysis once enough rounds played per course (>= 3)
-- [ ] Compare wedge distances against GC3 wedge sessions (once collected)
+- [ ] Side-by-side range vs course dispersion chart (one per club, GC3 + Arccos overlay)
