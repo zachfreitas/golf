@@ -262,6 +262,87 @@ Cross-reference with §1: if hole 3 is a double-bogey trap and you're hitting
 mostly 7-iron/8-iron from the tee, the 125-150 yd approach SG leak is the
 upstream cause. Fix the strike, fix the hole.
 """),
+
+    md(r"""
+## 5. Range (GC3) vs course (Arccos) — 7-iron comparison
+
+Side-by-side distributions of your 7-iron from the launch monitor and from
+real on-course shots. **Currently 7-iron only** because that's all the GC3
+data we have. Adding sessions for other clubs is the path to expanding
+this section.
+
+**Unit caveat (important).** GC3 'Carry' is launch-monitor carry, no roll.
+Arccos 'shot_distance_yd' is on-course total — carry + bounce + roll.
+GC3's 'Total' uses a modeled roll that's *very* aggressive for irons (60+
+yards on a 7-iron implies a hardpan bounce, not realistic green-holding).
+Best comparison: **GC3 carry vs Arccos total minus ~7 yd of typical iron
+roll** — the gap that remains is the on-course performance penalty (real
+lies, wind, pressure swings, partial swings to specific yardages).
+"""),
+
+    code(r"""
+res = dx.range_vs_course_7i(data)
+
+# Stats table
+stats_rows = []
+for key in ("gc3_carry_stats", "gc3_total_stats", "arc_total_stats", "gc3_offline_stats"):
+    s = res[key]
+    if s["n"] == 0: continue
+    stats_rows.append(s)
+stats_df = pd.DataFrame(stats_rows).set_index("label")
+stats_df
+"""),
+
+    code(r"""
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+# Panel 1: distance comparison (GC3 carry vs Arccos total)
+bins = range(0, 180, 8)
+axes[0].hist(res["gc3_carry"], bins=bins, alpha=0.55, color="#1f77b4",
+             label=f"GC3 carry (n={len(res['gc3_carry'])})", density=True)
+axes[0].hist(res["arc_total"], bins=bins, alpha=0.55, color="#d62728",
+             label=f"Arccos total (n={len(res['arc_total'])})", density=True)
+axes[0].axvline(res["gc3_carry"].median(), color="#1f77b4",
+                linestyle="--", linewidth=2, alpha=0.8)
+axes[0].axvline(res["arc_total"].median(), color="#d62728",
+                linestyle="--", linewidth=2, alpha=0.8)
+axes[0].set_title("7-iron distance: range CARRY vs course TOTAL")
+axes[0].set_xlabel("Yards"); axes[0].set_ylabel("Density")
+axes[0].legend()
+
+# Panel 2: GC3 offline dispersion (range only — course can't measure this)
+axes[1].hist(res["gc3_offline"], bins=range(-50, 51, 4), color="#2ca02c", alpha=0.7)
+axes[1].axvline(0, color="black", linewidth=1)
+axes[1].axvline(res["gc3_offline"].median(), color="red", linestyle="--",
+                linewidth=2, label=f"median = {res['gc3_offline'].median():.1f} yd")
+axes[1].set_title("7-iron offline dispersion (GC3 range; +R / -L)")
+axes[1].set_xlabel("Yards left (-) or right (+) of target")
+axes[1].set_ylabel("Shot count")
+axes[1].legend()
+
+plt.tight_layout(); plt.show()
+"""),
+
+    md(r"""
+**How to read it.**
+
+*Distance panel (left)*: the range carry (blue) being **right of** course
+total (red) is the gap to close. Range carry of 122 yd median should be
+roughly equivalent to course total of ~129 (carry + 7 roll). If course
+total is well below that, you're losing distance on course beyond what
+roll accounts for — pressure, partial swings, less-than-ideal lies.
+
+*Offline panel (right)*: course Arccos can't easily measure "offline"
+without knowing what you aimed at (the pin isn't always the target). The
+GC3 offline distribution is the cleanest lateral-dispersion signal we
+have. A median significantly left or right of 0 indicates a swing-path
+bias — that's a range diagnostic that translates directly to on-course
+misses on dogleg holes.
+
+**Caveat.** GC3 sessions only have 7-iron right now. Adding more clubs
+to the GC3 captures (driver, wedges) would let this section expand to a
+true per-club range-vs-course comparison.
+"""),
 ]
 
 

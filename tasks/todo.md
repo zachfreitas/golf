@@ -52,4 +52,4 @@ Live worklist for the project. Mark items `[x]` when shipped.
 ## Maybe later
 
 - [ ] Auto-pull Arccos via cron / Windows Task Scheduler after each round
-- [ ] Side-by-side range vs course dispersion chart (one per club, GC3 + Arccos overlay)
+- [x] Side-by-side range vs course dispersion chart (7-iron only for now — `diagnostics.range_vs_course_7i()` + Targeted Diagnostics §5). Expanding to other clubs needs GC3 sessions for those clubs.

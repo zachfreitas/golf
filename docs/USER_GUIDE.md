@@ -555,12 +555,52 @@ let you attack the green.
 
 Function: `diagnostics.twin_oaks_hole_heatmap(data, course_name="Twin Oaks GC")`
 
-Per-hole average score-to-par across all rounds at your home course
-(≥30 rounds in the data), ranked from worst-bleed to best-scoring.
+Per-hole performance at your home course (≥30 rounds in the data), with
+**three different "nemesis" lenses**:
 
-Current finding: hole 1 (par 4) is your single biggest bleed at +1.58
-to par average. Hole 9 close behind at +1.52. Holes 5, 12, 15, 17 are
-your scoring opportunities (+0.5 to +0.8 over par).
+- **avg_to_par + avg_rank** — sorted by mean strokes-over-par. Highlights
+  holes where occasional blow-ups inflate the average.
+- **double_or_worse_pct + double_rank** — % of rounds you make double
+  bogey or worse. Often matches the "feels like a nemesis" perception
+  much better than the average, because it's not skewed by occasional
+  pars dragging the mean down.
+- **nemesis_rank** — composite of the two.
+
+Current findings:
+- **By avg-strokes-over-par**: holes 1 (+1.58) and 9 (+1.52) lead.
+- **By double-bogey-frequency** (the "feels like a nemesis" metric):
+  holes 3 and 2 tie at 52% double-or-worse. Hole 3's typical outcome is
+  **double bogey** (median +2), not bogey — that's why it feels worse
+  than its average suggests.
+- Holes 5, 12, 15, 17 are scoring opportunities (lower bogey rate, more
+  par-or-better outcomes).
+
+The two-panel chart shows average on top, double-bogey-frequency below.
+
+### §5 — GC3 (range) vs Arccos (course) 7-iron comparison
+
+Function: `diagnostics.range_vs_course_7i(data)` (loads GC3 via
+`diagnostics.load_gc3_sessions()`)
+
+Side-by-side distance distributions: GC3 launch-monitor carry vs Arccos
+on-course total. Currently 7-iron only because GC3 data is 7-iron only;
+adding sessions for other clubs is the path to expanding this.
+
+**Unit caveat critical**: GC3 'Carry' is no-roll; Arccos
+`shot_distance_yd` is total (carry + roll). The valid comparison is GC3
+carry vs Arccos total minus ~7 yd of typical iron roll. GC3's own 'Total'
+column uses a modeled roll that's unrealistically aggressive (60+ yd of
+roll on a 7-iron) so it's not used for course comparison.
+
+Second panel shows the GC3 offline distribution — the only lateral-
+dispersion signal we have, since course Arccos can't infer aim point.
+A non-zero median indicates a swing-path bias.
+
+Current findings:
+- GC3 carry median 122 yd, std 29 yd
+- Arccos total median 113 yd, std 45 yd (much wider — course conditions add variability)
+- Estimated course carry ≈ 106 yd → 16-yard on-course penalty vs range
+- GC3 offline median −7 yd (left bias), p20 −19 yd (significant pull misses possible)
 
 ### How to re-run
 

@@ -1,4 +1,4 @@
-"""Targeted diagnostic analyses on top of Arccos data.
+"""Targeted diagnostic analyses on top of Arccos + GC3 data.
 
 Four functions, one per analysis the Targeted_Diagnostics notebook drives:
 
@@ -23,6 +23,9 @@ All functions return DataFrames sized for direct display in a notebook.
 Plotting is left to the caller so the diagnostics module stays render-free.
 """
 from __future__ import annotations
+
+import glob
+import re
 
 import pandas as pd
 
@@ -168,6 +171,104 @@ def lie_penalty_matrix(data) -> pd.DataFrame:
         out["Rough penalty (yd)"] = (out["From fairway (yd)"]
                                      - out["From rough (yd)"]).round(0)
     return out.sort_values("From tee (yd)", ascending=False, na_position="last")
+
+
+def _signed(val: str | float) -> float | None:
+    """Parse GC3 direction-suffixed values like '27.1 R' -> +27.1, '1.2 L' -> -1.2."""
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).strip()
+    m = re.match(r"(-?\d+\.?\d*)\s*([RL]?)", s)
+    if not m:
+        return None
+    num = float(m.group(1))
+    if m.group(2) == "L":
+        num = -num
+    return num
+
+
+def load_gc3_sessions(pattern: str = "session_summary*.csv") -> pd.DataFrame:
+    """Load all GC3 session CSVs into a unified DataFrame.
+
+    Each CSV has 2 header rows (golfer name + club tag), so we skip them.
+    Direction-suffixed numeric columns (Offline, Curve, Launch Direction,
+    Side Spin) are parsed into signed floats: Right = +, Left = −.
+    """
+    files = sorted(glob.glob(pattern))
+    if not files:
+        return pd.DataFrame()
+    frames = []
+    for f in files:
+        try:
+            # FSX export format: line 1 = golfer name + "Shot Analysis",
+            # line 2 = blank, line 3 = "<club>,", line 4 = column headers,
+            # line 5+ = data. Header row has a leading empty cell for shot
+            # number, which produces an "Unnamed: 0" column.
+            df = pd.read_csv(f, skiprows=3)
+            df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
+            df["__session_file"] = f
+            frames.append(df)
+        except Exception:
+            continue
+    if not frames:
+        return pd.DataFrame()
+    gc = pd.concat(frames, ignore_index=True)
+    # Parse direction-suffixed columns into signed floats.
+    for col in ("Offline", "Curve", "Launch Direction", "Side Spin"):
+        if col in gc.columns:
+            gc[col + "_signed"] = gc[col].apply(_signed)
+    return gc
+
+
+def range_vs_course_7i(data, gc3: pd.DataFrame | None = None) -> dict:
+    """Compare GC3 range 7-iron distribution to on-course 7-iron from Arccos.
+
+    Returns a dict with stats and the raw distributions ready for plotting.
+
+    Important: GC3 'Carry' is launch-monitor carry distance (no roll).
+    Arccos 'shot_distance_yd' is on-course TOTAL distance (carry + roll).
+    For irons, roll is typically 5-10 yd; the model-comparable column is
+    GC3 'Total' rather than 'Carry'. Both are reported below.
+    """
+    if gc3 is None:
+        gc3 = load_gc3_sessions()
+
+    gc3_carry = gc3["Carry"].dropna() if not gc3.empty else pd.Series([], dtype=float)
+    gc3_total = gc3["Total"].dropna() if not gc3.empty else pd.Series([], dtype=float)
+    gc3_offline = (gc3["Offline_signed"].dropna()
+                   if "Offline_signed" in gc3.columns else pd.Series([], dtype=float))
+
+    # Arccos 7-iron shots — current bag only, recent rounds.
+    s = data.shots_in_bag()
+    arc_7i = s[(s["club"] == "7 Iron") & (s["shot_distance_yd"] > 0)
+               & ~s["is_putt"].astype(bool)]
+    arc_dist = arc_7i["shot_distance_yd"].dropna()
+
+    def _stats(series: pd.Series, label: str) -> dict:
+        if series.empty:
+            return {"label": label, "n": 0}
+        return {
+            "label": label,
+            "n": int(len(series)),
+            "mean": round(series.mean(), 1),
+            "std": round(series.std(), 1),
+            "p20": round(series.quantile(0.2), 1),
+            "median": round(series.median(), 1),
+            "p80": round(series.quantile(0.8), 1),
+            "min": round(series.min(), 1),
+            "max": round(series.max(), 1),
+        }
+
+    return {
+        "gc3_carry_stats": _stats(gc3_carry, "GC3 carry (yd, range, no roll)"),
+        "gc3_total_stats": _stats(gc3_total, "GC3 total (yd, range, modeled roll)"),
+        "arc_total_stats": _stats(arc_dist, "Arccos total (yd, course)"),
+        "gc3_offline_stats": _stats(gc3_offline, "GC3 offline (yd, +R/-L)"),
+        "gc3_carry": gc3_carry,
+        "gc3_total": gc3_total,
+        "gc3_offline": gc3_offline,
+        "arc_total": arc_dist,
+    }
 
 
 def twin_oaks_hole_heatmap(data, course_name: str = "Twin Oaks GC") -> pd.DataFrame:
