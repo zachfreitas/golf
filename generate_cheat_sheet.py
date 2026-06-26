@@ -10,6 +10,49 @@ df = pd.read_excel('Book1.xlsx')
 # Extract relevant columns
 clubs_data = df[['Club Abbriation', 'Club', 'Loft', 'Swing Speed MPH']].copy()
 
+# Load REALISTIC distances from bag_inventory.csv. The original cheat-sheet
+# formula (ball_speed * 2.3) is Tour-pro level and produces fantasy numbers
+# for amateur swing speeds (driver 280 carry at 84 mph). bag_inventory has
+# the carries calibrated to Arccos Smart Distance + measured GC3 data.
+_bag = pd.read_csv('bag_inventory.csv')
+_bag = _bag[_bag['in_bag'] == 1]
+
+# Per-club improvement "ceiling" delta — what cleaner strike + optimized
+# launch/spin buys you WITHOUT changing swing speed. Conservative estimates.
+CEILING_DELTA_YD = {
+    'Dr': 12, '3w': 10,
+    '3h': 9, '4h': 9,
+    '5i': 8, '6i': 8,
+    '7i': 7, '8i': 7,
+    '9i': 6, 'PW': 6,
+    'GW': 4, 'SW': 4, 'LW': 4,
+}
+
+# Map bag_inventory `club` strings to Book1 `Club Abbriation` codes.
+_BAG_CLUB_TO_ABBR = {
+    'Driver': 'Dr', '3 Wood': '3w',
+    '3 Hybrid': '3h', '4 Hybrid': '4h',
+    '5 Iron': '5i', '6 Iron': '6i', '7 Iron': '7i',
+    '8 Iron': '8i', '9 Iron': '9i', 'PW Iron': 'PW',
+    '52 Wedge': 'GW', '56 Wedge': 'SW', '60 Wedge': 'LW',
+}
+_bag['abbr'] = _bag['club'].map(_BAG_CLUB_TO_ABBR)
+_realistic = _bag.dropna(subset=['abbr']).set_index('abbr')
+
+
+def realistic_distances(abbr):
+    """Return (carry_current, carry_ceiling, total_current, total_ceiling)
+    from bag_inventory.csv plus the per-club improvement delta."""
+    if abbr not in _realistic.index:
+        return (None, None, None, None)
+    row = _realistic.loc[abbr]
+    cur_carry = float(row.get('carry_yd')) if pd.notna(row.get('carry_yd')) else None
+    cur_total = float(row.get('total_carry_yd')) if pd.notna(row.get('total_carry_yd')) else None
+    delta = CEILING_DELTA_YD.get(abbr, 5)
+    ceil_carry = cur_carry + delta if cur_carry else None
+    ceil_total = cur_total + delta if cur_total else None
+    return cur_carry, ceil_carry, cur_total, ceil_total
+
 # Clean loft data (remove degree symbols and ranges)
 def clean_loft(loft_str):
     if isinstance(loft_str, str):
@@ -201,15 +244,24 @@ for idx, row in clubs_data.iterrows():
     # Calculate angle of attack
     aoa_target, aoa_low, aoa_high = calculate_angle_of_attack(club_name, loft)
 
-    # Calculate carry distance (using target values)
-    carry_target = calculate_carry_distance(ball_speed_target, launch_target, spin_target)
-    carry_low = calculate_carry_distance(ball_speed_low, launch_low, spin_high)
-    carry_high = calculate_carry_distance(ball_speed_high, launch_high, spin_low)
-
-    # Calculate total distance
-    total_target = calculate_total_distance(carry_target)
-    total_low = calculate_total_distance(carry_low)
-    total_high = calculate_total_distance(carry_high)
+    # Distances anchored to bag_inventory.csv (Arccos Smart Distance + GC3
+    # measured for 7i). The legacy Tour-coefficient formulas are kept above
+    # for the launch/spin/smash targets but NOT used for carry/total.
+    cur_carry, ceil_carry, cur_total, ceil_total = realistic_distances(club_abbr)
+    # Fall back to the legacy formula only if bag_inventory has no data
+    # for this club (shouldn't happen for in-bag clubs).
+    if cur_carry is None:
+        cur_carry = calculate_carry_distance(ball_speed_target, launch_target, spin_target)
+        ceil_carry = cur_carry + CEILING_DELTA_YD.get(club_abbr, 5)
+    if cur_total is None:
+        cur_total = calculate_total_distance(cur_carry)
+        ceil_total = cur_total + CEILING_DELTA_YD.get(club_abbr, 5)
+    carry_target = cur_carry          # back-compat alias for downstream code
+    carry_low = cur_carry
+    carry_high = ceil_carry
+    total_target = cur_total
+    total_low = cur_total
+    total_high = ceil_total
 
     # Calculate peak height
     peak_target = calculate_peak_height(ball_speed_target, launch_target, spin_target)
@@ -265,13 +317,14 @@ for idx, row in clubs_data.iterrows():
         'Club': f"{club_abbr} ({loft}°)",
         'Club Speed': f"{swing_speed}",
 
-        # Carry
-        'Carry Target': f"{carry_target:.0f}",
-        'Carry Range': f"{carry_low:.0f}-{carry_high:.0f}",
+        # Carry — Current = bag_inventory realistic; Ceiling = with cleaner
+        # strike + optimized launch/spin (no swing-speed change required)
+        'Carry Current': f"{carry_target:.0f}",
+        'Carry Ceiling': f"{carry_high:.0f}",
 
-        # Total
-        'Total Target': f"{total_target:.0f}",
-        'Total Range': f"{total_low:.0f}-{total_high:.0f}",
+        # Total — same convention as Carry
+        'Total Current': f"{total_target:.0f}",
+        'Total Ceiling': f"{total_high:.0f}",
 
         # Peak Height
         'Peak Height Target': f"{peak_target:.0f}",
@@ -356,13 +409,14 @@ border = Border(left=Side(style='thin'), right=Side(style='thin'),
 
 # Add title
 ws.merge_cells('A1:F1')
-ws['A1'] = "GC3 LAUNCH MONITOR CHEAT SHEET - Optimized for Your Swing"
+ws['A1'] = "GC3 LAUNCH MONITOR CHEAT SHEET — Calibrated to Your Real Data"
 ws['A1'].font = Font(bold=True, size=14, color="366092")
 ws['A1'].alignment = center_align
 
 # Add subtitle
 ws.merge_cells('A2:F2')
-ws['A2'] = "Target Values and Acceptable Ranges for Maximum Carry Distance and Green-Holding Descent Angles"
+ws['A2'] = ("Distances from bag_inventory.csv (Arccos Smart Distance + GC3 measured for 7i). "
+            "Current = today; Ceiling = clean strike + optimized launch/spin (no swing-speed change).")
 ws['A2'].font = Font(italic=True, size=10)
 ws['A2'].alignment = center_align
 
@@ -443,8 +497,8 @@ for i in range(len(results) - 1):
     club1 = results[i]
     club2 = results[i + 1]
 
-    carry1 = float(club1['Carry Target'])
-    carry2 = float(club2['Carry Target'])
+    carry1 = float(club1['Carry Current'])
+    carry2 = float(club2['Carry Current'])
     gap = carry1 - carry2
 
     club1_name = club1['Club']
@@ -479,14 +533,15 @@ ws[f'A{notes_row}'].font = Font(bold=True, size=11, color="366092")
 notes_row += 1
 
 notes = [
-    "• All target values are optimized for YOUR specific swing speeds and lofts",
-    "• Carry distances assume standard conditions (sea level, 70°F, no wind)",
+    "• Carry/Total Current = bag_inventory.csv (Arccos Smart Distance, 7i from GC3)",
+    "• Carry/Total Ceiling = realistic improvement from cleaner strike + better launch/spin (no swing-speed change)",
+    "• Launch/Spin/Smash/AoA targets are aspirational — calibrated to club + swing speed",
+    "• Carry numbers assume standard conditions (sea level, 70°F, no wind)",
     "• Descent angles 40°+ ensure balls land softly and hold greens",
-    "• Green highlight = Target value | Yellow highlight = Acceptable range",
+    "• Green highlight = Current value | Yellow highlight = Ceiling target",
     "• Focus on TRENDS across multiple shots, not single shot perfection",
-    "• Ball speed and smash factor are your 'contact quality' metrics",
-    "• Launch angle + spin rate determine trajectory shape and carry",
-    "• Club path + face angle at impact determine start line and curve",
+    "• Reaching the Ceiling carries requires lifting smash 1.31→1.38 + dialing launch/spin",
+    "• Reaching distances beyond Ceiling requires actual swing-speed gains (months of work, not range tweaks)",
 ]
 
 for idx, note in enumerate(notes):
