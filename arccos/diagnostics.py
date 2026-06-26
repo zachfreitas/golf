@@ -202,10 +202,19 @@ def twin_oaks_hole_heatmap(data, course_name: str = "Twin Oaks GC") -> pd.DataFr
     summary = (df.groupby("hole_id")
                .agg(rounds=("round_id", "nunique"),
                     par=("par", "first"),
-                    avg_score=("shots", "mean"),
                     avg_to_par=("net_score", "mean"),
+                    median_to_par=("net_score", "median"),
+                    bogey_or_worse_pct=("net_score", lambda x: (x >= 1).mean() * 100),
+                    double_or_worse_pct=("net_score", lambda x: (x >= 2).mean() * 100),
+                    par_or_better_pct=("net_score", lambda x: (x <= 0).mean() * 100),
                     worst_to_par=("net_score", "max"),
                     best_to_par=("net_score", "min"))
-               .round(2).sort_index())
-    summary["bleed_rank"] = summary["avg_to_par"].rank(ascending=False).astype(int)
+               .round(1).sort_index())
+    # Rank by both average AND median+frequency so we can flag holes where
+    # the average understates the typical pain (occasional par drags it down
+    # while most rounds are double-bogey or worse — see hole 3 vs hole 1).
+    summary["avg_rank"] = summary["avg_to_par"].rank(ascending=False, method="min").astype(int)
+    summary["double_rank"] = summary["double_or_worse_pct"].rank(ascending=False, method="min").astype(int)
+    # Composite nemesis score: average of the two ranks (lower = worse hole).
+    summary["nemesis_rank"] = ((summary["avg_rank"] + summary["double_rank"]) / 2).rank(method="min").astype(int)
     return summary

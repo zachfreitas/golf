@@ -201,10 +201,19 @@ actually be the longer one to the green.
     md(r"""
 ## 4. Twin Oaks hole-by-hole
 
-Per-hole average score-to-par across all rounds at Twin Oaks GC (your most-
-played course). `bleed_rank` 1 = worst hole, rank 18 = best. Use this to
-target pre-round prep on the holes that hurt most and to be more
-aggressive on the ones you score well on.
+Per-hole performance at Twin Oaks GC (your most-played course). Three
+ranks help distinguish different kinds of "bad hole":
+
+- **`avg_rank`** — sorted by mean strokes-over-par. Highlights holes where
+  blow-ups (triples, others) inflate the average.
+- **`double_rank`** — sorted by % of rounds you make double-bogey-or-worse.
+  Highlights holes where the *typical* outcome is bad, not just the worst
+  outcome. This often matches "feel" better than the average.
+- **`nemesis_rank`** — composite of the two. Lower = worse hole overall.
+
+A hole with `avg_rank=1` but `double_rank=10` blows up occasionally but
+plays normally most rounds. A hole with `double_rank=1` but `avg_rank=5`
+beats you down day after day even if it rarely cataclysmically explodes.
 """),
 
     code(r"""
@@ -213,31 +222,45 @@ twin
 """),
 
     code(r"""
-fig, ax = plt.subplots(figsize=(11, 4.5))
-# Colour: red = bleed, green = score, scaled by par
-colors = ["#d62728" if v >= 1.5 else
-          "#ff7f0e" if v >= 1.0 else
-          "#fdd835" if v >= 0.5 else "#2ca02c"
-          for v in twin["avg_to_par"]]
-ax.bar(twin.index.astype(str), twin["avg_to_par"], color=colors)
-ax.axhline(0, color="black", linewidth=0.5)
-ax.set_title("Twin Oaks GC: average score-to-par by hole "
-             f"(across {twin['rounds'].max()} rounds)")
-ax.set_xlabel("Hole #")
-ax.set_ylabel("Strokes over par (avg)")
+# Two-panel view: avg-to-par on top, double-bogey-or-worse % below.
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
+
+# Panel 1: average strokes over par
+colors1 = ["#d62728" if v >= 1.5 else "#ff7f0e" if v >= 1.0
+           else "#fdd835" if v >= 0.5 else "#2ca02c" for v in twin["avg_to_par"]]
+ax1.bar(twin.index.astype(str), twin["avg_to_par"], color=colors1)
+ax1.axhline(0, color="black", linewidth=0.5)
+ax1.set_title(f"Twin Oaks GC: avg strokes over par by hole "
+              f"(across {twin['rounds'].max()} rounds)")
+ax1.set_ylabel("Avg strokes over par")
 for i, (par, n, v) in enumerate(zip(twin["par"], twin["rounds"], twin["avg_to_par"])):
-    ax.text(i, v + 0.05, f"par {par}\nn={n}", ha="center", fontsize=8)
+    ax1.text(i, v + 0.05, f"par{par}", ha="center", fontsize=8)
+
+# Panel 2: double-bogey-or-worse frequency — "feels-like-a-nemesis" metric
+colors2 = ["#d62728" if v >= 50 else "#ff7f0e" if v >= 35
+           else "#fdd835" if v >= 20 else "#2ca02c" for v in twin["double_or_worse_pct"]]
+ax2.bar(twin.index.astype(str), twin["double_or_worse_pct"], color=colors2)
+ax2.axhline(50, color="red", linewidth=0.5, linestyle="--", label="50% line")
+ax2.set_title("How often you make double-bogey or worse on each hole")
+ax2.set_xlabel("Hole #")
+ax2.set_ylabel("Double-bogey-or-worse %")
+ax2.legend(loc="upper right")
+for i, v in enumerate(twin["double_or_worse_pct"]):
+    ax2.text(i, v + 1, f"{v:.0f}%", ha="center", fontsize=8)
+
 plt.tight_layout(); plt.show()
 """),
 
     md(r"""
-**Action plan.** Rank-1 holes (your worst) are where pre-round visualization
-+ a clear course-management plan moves the needle. Rank-16-to-18 holes are
-where you already score well — pin the strategy there, don't get cute.
+**Action plan.** Holes high on the **double-bogey-frequency** chart are
+where pre-round visualization + a conservative game plan pay off most —
+those are the holes that beat you up consistently. Holes high on the
+**average** chart but moderate on double-bogey-frequency are blow-up holes
+— a more aggressive plan with disciplined bail-out is the lever there.
 
-For the bleed leaders specifically: check the matching by-club and by-lie
-patterns from §1 — if hole 1 bleeds and most of your 1st-shot misses end in
-rough on a tight fairway, your driver/3W choice is the lever, not your iron.
+Cross-reference with §1: if hole 3 is a double-bogey trap and you're hitting
+mostly 7-iron/8-iron from the tee, the 125-150 yd approach SG leak is the
+upstream cause. Fix the strike, fix the hole.
 """),
 ]
 
