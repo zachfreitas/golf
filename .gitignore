@@ -1,0 +1,52 @@
+# Credentials — must never be committed
+*creds*.json
+*credentials*.json
+.env
+.env.*
+credentials/
+*.pem
+*.key
+
+# Raw Arccos cache (contains GPS + PII; lives in ~/golf-data anyway, but defensive)
+arccos_raw/
+golf-data/
+*_raw.json
+
+# GHIN / 18Birdies sync artifacts (PII)
+ghin_*.json
+ghin_*.csv
+eighteenbirdies_*.json
+
+# Notebook checkpoints + jupyter cruft
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# OneDrive sync detritus
+.tmp.driveupload/
+*-conflicted copy*
+~$*.xlsx
+~$*.docx
+~$*.pptx
+
+# Local secrets / scratch
+scratch/
+local/
+.vscode/
+.idea/
