@@ -1,7 +1,7 @@
 """Generate Arccos_Targeted_Diagnostics.ipynb from this Python source.
 
-Run: python build_diagnostics_notebook.py
-Output: Arccos_Targeted_Diagnostics.ipynb
+Run: python scripts/build_diagnostics_notebook.py
+Output: notebooks/Arccos_Targeted_Diagnostics.ipynb
 
 Authoring cells in plain Python keeps the analyses diff-friendly and
 re-executable via `jupyter nbconvert --execute --inplace`.
@@ -14,7 +14,11 @@ Four sections:
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import nbformat as nbf
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def md(s: str):
@@ -46,6 +50,17 @@ Arccos Course Analysis notebook:
 """),
 
     code(r"""
+# --- Setup ---------------------------------------------------------
+# Walk up to find the repo root (contains the `arccos` package) and put
+# it on sys.path so this notebook runs from anywhere.
+import sys
+from pathlib import Path
+_p = Path.cwd().resolve()
+while _p != _p.parent and not (_p / "arccos").is_dir():
+    _p = _p.parent
+if str(_p) not in sys.path:
+    sys.path.insert(0, str(_p))
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -354,9 +369,10 @@ def main() -> None:
                        "name": "python3"},
         "language_info": {"name": "python"},
     }
-    with open("Arccos_Targeted_Diagnostics.ipynb", "w", encoding="utf-8") as f:
+    out_path = REPO_ROOT / "notebooks" / "Arccos_Targeted_Diagnostics.ipynb"
+    with open(out_path, "w", encoding="utf-8") as f:
         nbf.write(nb, f)
-    print("Wrote Arccos_Targeted_Diagnostics.ipynb")
+    print(f"Wrote {out_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

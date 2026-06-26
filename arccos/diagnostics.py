@@ -26,8 +26,13 @@ from __future__ import annotations
 
 import glob
 import re
+from pathlib import Path
 
 import pandas as pd
+
+# arccos/diagnostics.py -> repo root is two levels up.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_DEFAULT_GC3_GLOB = str(_REPO_ROOT / "data" / "sessions" / "session_summary*.csv")
 
 # Roughly PGA Tour averages for make %, used as the benchmark overlay in
 # putt_make_by_distance. Source: Mark Broadie published putting stats.
@@ -187,13 +192,18 @@ def _signed(val: str | float) -> float | None:
     return num
 
 
-def load_gc3_sessions(pattern: str = "session_summary*.csv") -> pd.DataFrame:
+def load_gc3_sessions(pattern: str | None = None) -> pd.DataFrame:
     """Load all GC3 session CSVs into a unified DataFrame.
+
+    Default location: data/sessions/ at the repo root. Override with the
+    `pattern` argument to point elsewhere.
 
     Each CSV has 2 header rows (golfer name + club tag), so we skip them.
     Direction-suffixed numeric columns (Offline, Curve, Launch Direction,
     Side Spin) are parsed into signed floats: Right = +, Left = −.
     """
+    if pattern is None:
+        pattern = _DEFAULT_GC3_GLOB
     files = sorted(glob.glob(pattern))
     if not files:
         return pd.DataFrame()

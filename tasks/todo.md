@@ -17,7 +17,8 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [x] Created `bag_inventory.csv` as authoritative bag source (14 in-bag + 3 owned-but-bench, with shaft/loft/measured carry/swing speed + data source provenance)
 - [x] **Diagnostics §4 fix**: hole-by-hole heatmap now exposes median + double-bogey-or-worse % alongside avg-to-par. Hole 3 (median +2, 52% double+) correctly identified as a true nemesis even though it ranks 3rd on raw average.
 - [x] **Diagnostics §5**: GC3 ↔ Arccos 7-iron range vs course comparison (`range_vs_course_7i`). Surfaces the ~16 yd on-course performance gap and the −7 yd left bias.
-- [x] **Cheat-sheet recalibration**: `generate_cheat_sheet.py` now reads `bag_inventory.csv` for realistic distances (was using Tour-pro 2.3 yd/mph coefficient = +40-80 yd inflation). Added `Carry Ceiling` + `Total Ceiling` columns showing achievable improvement at current swing speed.
+- [x] **Cheat-sheet recalibration**: `scripts/generate_cheat_sheet.py` now reads `data/bag_inventory.csv` for realistic distances (was using Tour-pro 2.3 yd/mph coefficient = +40-80 yd inflation). Added `Carry Ceiling` + `Total Ceiling` columns showing achievable improvement at current swing speed.
+- [x] **Repo reorganization**: Moved root-level mess (22 files) into `data/`, `data/sessions/`, `outputs/`, `scripts/`, `notebooks/`. Scripts now use `REPO_ROOT = Path(__file__).resolve().parent.parent`; notebooks walk up to find `arccos`/`data`. Everything works from any cwd. Fixed pre-existing `asdfasfdfdff` typo in GC3 notebook cell-19.
 
 ## Decisions reached
 

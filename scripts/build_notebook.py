@@ -1,14 +1,18 @@
 """Generate Arccos_Course_Analysis.ipynb from a clean Python source.
 
-Run: python build_notebook.py
-Output: Arccos_Course_Analysis.ipynb
+Run: python scripts/build_notebook.py
+Output: notebooks/Arccos_Course_Analysis.ipynb
 
 Authoring as cells in this file keeps the analysis under version control as
 plain Python (diff-friendly), then materialises the notebook for execution.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import nbformat as nbf
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def md(s: str):
@@ -46,13 +50,23 @@ Four sections:
 
     code(r"""
 # --- Setup ---------------------------------------------------------
+# Walk up to the repo root (the directory containing the `arccos` package)
+# and put it on sys.path. Lets this notebook run from anywhere — repo root,
+# notebooks/, or wherever Jupyter happens to be launched.
+import sys
+from pathlib import Path
+_p = Path.cwd().resolve()
+while _p != _p.parent and not (_p / "arccos").is_dir():
+    _p = _p.parent
+if str(_p) not in sys.path:
+    sys.path.insert(0, str(_p))
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from arccos import load_arccos
 
-# Repo-style: make matplotlib readable in dark/light themes alike.
 plt.rcParams.update({"figure.figsize": (10, 4), "figure.dpi": 110,
                      "axes.grid": True, "grid.alpha": 0.3})
 
@@ -290,9 +304,10 @@ def main() -> None:
                        "name": "python3"},
         "language_info": {"name": "python"},
     }
-    with open("Arccos_Course_Analysis.ipynb", "w", encoding="utf-8") as f:
+    out_path = REPO_ROOT / "notebooks" / "Arccos_Course_Analysis.ipynb"
+    with open(out_path, "w", encoding="utf-8") as f:
         nbf.write(nb, f)
-    print("Wrote Arccos_Course_Analysis.ipynb")
+    print(f"Wrote {out_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

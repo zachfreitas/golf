@@ -1,11 +1,16 @@
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+# Anchor paths to repo root so the script works from any cwd.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
 # Read the original club data
-df = pd.read_excel('Book1.xlsx')
+df = pd.read_excel(REPO_ROOT / "data" / "Book1.xlsx")
 
 # Extract relevant columns
 clubs_data = df[['Club Abbriation', 'Club', 'Loft', 'Swing Speed MPH']].copy()
@@ -14,7 +19,7 @@ clubs_data = df[['Club Abbriation', 'Club', 'Loft', 'Swing Speed MPH']].copy()
 # formula (ball_speed * 2.3) is Tour-pro level and produces fantasy numbers
 # for amateur swing speeds (driver 280 carry at 84 mph). bag_inventory has
 # the carries calibrated to Arccos Smart Distance + measured GC3 data.
-_bag = pd.read_csv('bag_inventory.csv')
+_bag = pd.read_csv(REPO_ROOT / "data" / "bag_inventory.csv")
 _bag = _bag[_bag['in_bag'] == 1]
 
 # Per-club improvement "ceiling" delta — what cleaner strike + optimized
@@ -553,8 +558,9 @@ for idx, note in enumerate(notes):
     cell.font = Font(size=9)
 
 # Save the workbook
-wb.save('GC3_Launch_Monitor_Cheat_Sheet.xlsx')
+_out_path = REPO_ROOT / "outputs" / "GC3_Launch_Monitor_Cheat_Sheet.xlsx"
+wb.save(_out_path)
 
 print("SUCCESS: GC3 Launch Monitor Cheat Sheet created!")
 print(f"Generated comprehensive data for {len(results)} clubs")
-print(f"File saved as: GC3_Launch_Monitor_Cheat_Sheet.xlsx")
+print(f"File saved as: {_out_path.relative_to(REPO_ROOT)}")

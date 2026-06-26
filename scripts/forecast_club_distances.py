@@ -20,7 +20,12 @@ Outputs:
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
+
+# Anchor paths to repo root so the script works from any cwd.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 import pandas as pd
 
@@ -169,8 +174,9 @@ def main() -> None:
               "same total-wedge p80 for each. Trust Smart Distance for "
               "per-wedge planning.")
 
-    out.to_csv("per_club_on_course.csv", index=False)
-    print("\nSaved: per_club_on_course.csv")
+    out_path = REPO_ROOT / "outputs" / "per_club_on_course.csv"
+    out.to_csv(out_path, index=False)
+    print(f"\nSaved: {out_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":
