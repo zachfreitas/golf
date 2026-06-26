@@ -15,6 +15,9 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [x] Diagnose loft-vs-swing question: distance progression issues at 7i/8i/PW are SWING-related, not loft-related → NO loft adjustments recommended
 - [x] **Round 2 analyses**: extended loader (handicaps, per-round dash, course slope/rating), built `arccos/diagnostics.py` (4 functions), shipped `Arccos_Targeted_Diagnostics.ipynb`
 - [x] Created `bag_inventory.csv` as authoritative bag source (14 in-bag + 3 owned-but-bench, with shaft/loft/measured carry/swing speed + data source provenance)
+- [x] **Diagnostics §4 fix**: hole-by-hole heatmap now exposes median + double-bogey-or-worse % alongside avg-to-par. Hole 3 (median +2, 52% double+) correctly identified as a true nemesis even though it ranks 3rd on raw average.
+- [x] **Diagnostics §5**: GC3 ↔ Arccos 7-iron range vs course comparison (`range_vs_course_7i`). Surfaces the ~16 yd on-course performance gap and the −7 yd left bias.
+- [x] **Cheat-sheet recalibration**: `generate_cheat_sheet.py` now reads `bag_inventory.csv` for realistic distances (was using Tour-pro 2.3 yd/mph coefficient = +40-80 yd inflation). Added `Carry Ceiling` + `Total Ceiling` columns showing achievable improvement at current swing speed.
 
 ## Decisions reached
 

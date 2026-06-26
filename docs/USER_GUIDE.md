@@ -46,9 +46,9 @@ Every file committed to this repo, what it is, and when to use it.
 | File | What it is | When to use |
 |---|---|---|
 | `GC3_Golf_Analysis.ipynb` | Original notebook: 7-iron deep dive across 125 shots / 5 sessions. Dispersion maps, smash analysis, swing-flaw diagnosis, session-by-session trends. | Open after each new GC3 session to see how the latest practice changed your numbers. |
-| `generate_cheat_sheet.py` | Script that reads `Book1.xlsx` (your bag) and writes `GC3_Launch_Monitor_Cheat_Sheet.xlsx` — a printable per-club target sheet for use on the range. | Run when your bag changes (new club, regripped, etc.) or when you re-calibrate target smash/launch values. |
-| `Book1.xlsx` | Your bag: club abbreviation, model, loft, shaft, swing speed (estimated). | Edit the swing speeds as you measure them on GC3, then rerun the cheat sheet + forecast scripts. |
-| `GC3_Launch_Monitor_Cheat_Sheet.xlsx` | Output of `generate_cheat_sheet.py` — print this and take it to the range. | Range reference card. |
+| `generate_cheat_sheet.py` | Reads `bag_inventory.csv` for realistic per-club distances + `Book1.xlsx` for swing speeds, writes `GC3_Launch_Monitor_Cheat_Sheet.xlsx`. Distance columns are **Current** (today's reality) and **Ceiling** (achievable with clean strike + optimized launch/spin). Launch/spin/smash targets are still computed from the legacy formula and remain valid aspirational range goals. | Run when bag changes or after a meaningful re-measurement on the GC3. |
+| `Book1.xlsx` | Your bag specs: abbreviation, model, loft, shaft, **estimated** swing speed per club. Only 7-iron is measured. | Edit when shafts/lofts change. Note that `bag_inventory.csv` is the authoritative bag source now; Book1 lingers because the cheat-sheet script reads swing speeds from it. |
+| `GC3_Launch_Monitor_Cheat_Sheet.xlsx` | Output of `generate_cheat_sheet.py` — print this and take it to the range. **Current vs Ceiling**: see [§7](#7-distance-metrics-which-to-use-when). | Range reference card. Earlier versions (pre-2026-06) had Tour-pro distance numbers — those were wrong; if you find a printed copy, throw it out and reprint. |
 | `session_summary20260214.csv` … `20260302.csv` | Raw GC3 exports, one per session. Schema in [§6](#62-gc3-session-csv). | Source data for the GC3 notebook. Drop new ones in as you collect them. |
 | `personalized_targets.csv` | One-row summary of your measured 7i vs target (current carry, target carry, smash, launch, spin). | Quick reference; expanded into the full per-club view by `forecast_club_distances.py`. |
 | `session_progress.csv` | Across-session 7i trend (volume, smash, consistency, carry mean). | Track if range practice is actually moving the needle. |
@@ -105,11 +105,23 @@ pip install -r requirements.txt
 
 ### When something structural changes
 
-- **New club** → update `Book1.xlsx` (add the row), then
+- **New club** → update `Book1.xlsx` (add the row, swing speed estimate) AND
+  add an `in_bag=1` row to `bag_inventory.csv` (with measured Smart Distance
+  if Arccos has it after a few rounds, else leave blank to forecast). Then
   `python generate_cheat_sheet.py` to refresh the Excel cheat sheet.
-- **Measured a new swing speed** → update `Book1.xlsx` *and* the `MEASURED_7I_SPEED`
-  / `MEASURED_7I_CARRY` constants in `forecast_club_distances.py`, then
-  `python forecast_club_distances.py` to refresh `realistic_club_distances.csv`.
+- **Measured a new swing speed** → update both `Book1.xlsx` and the matching
+  row in `bag_inventory.csv` (`swing_speed_mph` column). For 7-iron only,
+  also update `MEASURED_7I_SPEED` and `MEASURED_7I_CARRY` references in
+  `forecast_club_distances.py` (the GC3 anchor). Then rerun
+  `python forecast_club_distances.py` and `python generate_cheat_sheet.py`.
+- **Sync a fresh Arccos round** → after `pull_arccos.py`, Smart Distance for
+  every paired club refreshes in `_cache_raw/clubs_v6.json`. Rerun
+  `python forecast_club_distances.py` to update `per_club_on_course.csv`
+  and `python generate_cheat_sheet.py` to refresh the cheat sheet with
+  the latest Smart Distance numbers (note: cheat sheet currently reads
+  carries from `bag_inventory.csv`, not Smart Distance directly — update
+  the inventory CSV first if you want the cheat sheet to reflect a new
+  Smart Distance reading).
 
 ### What the GC3 notebook tells you
 
@@ -330,6 +342,35 @@ different things and you'll confuse yourself if you mix them.
 primary column; Recent p80 is shown as a cross-check. The GC3 7-iron is
 reported at the bottom for the range-vs-course delta only.
 
+### Current vs Ceiling distances
+
+Two flavours of "what to expect" — used in `GC3_Launch_Monitor_Cheat_Sheet.xlsx`
+and `bag_inventory.csv`:
+
+- **Current** = what you actually carry today. From Arccos Smart Distance
+  (woods/irons), GC3 measured (7-iron), or your manually-provided wedge
+  carries.
+- **Ceiling** = realistic best-case with cleaner contact + optimized launch
+  and spin, **at your current swing speed**. Per-club delta over Current:
+  driver +12, 3W +10, hybrids +9, long irons +8, mid +7, short +6, wedges
+  +4 yd. These deltas come from typical observed improvement when amateurs
+  dial in smash factor (1.31 → 1.38 area) and launch/spin to spec.
+
+**What Ceiling is NOT.** It is not the target you reach by swinging harder
+or by chasing the launch-monitor "perfect" numbers from PGA Tour
+references. Anything beyond Ceiling requires actual swing-speed gains —
+months of speed-training work, often paired with fitness changes, not a
+single range session.
+
+**Why the cheat sheet used to be wrong.** The legacy `generate_cheat_sheet.py`
+used `carry = ball_speed × 2.3 × launch_factor × spin_factor`. The 2.3
+coefficient is what Tour pros get on perfectly-optimized shots. Applied to
+amateur swing speeds, it produced fantasy distances (driver 280 carry off
+an 84 mph swing). The script now ignores that formula for distances and
+reads from `bag_inventory.csv` directly. The launch/spin/smash target
+columns from the legacy formula are kept because those numbers ARE valid
+practice targets at any swing speed.
+
 ---
 
 ## 8. Current diagnostic findings
@@ -458,6 +499,8 @@ the 9-iron entirely achieves the same end for $0.
 | `Club 35` appears in shots.csv but not in your bag | Puller's `CLUBTYPE` map doesn't include clubType 35 — your 3-hybrid (Qi10 Rescue 19°) shows as the generic fallback "Club 35". | Already handled by `arccos/loader.py` — it surfaces `paired_bag.label = "3 Hybrid"` for display while keeping `shots_csv_label = "Club 35"` for shots.csv matching. |
 | Smart Distance doesn't match the median I see in shots.csv | Different metrics — see [§7](#7-distance-metrics-which-to-use-when). Median is dragged down by mis-hits; Smart Distance is bias-corrected toward struck shots. Use Smart Distance for planning. | Working as intended. |
 | 7i shot_distance shows 120 yd but range carry is 127 yd | Different units. Shots.csv is **TOTAL** (carry + roll). Range carry is **CARRY only**. Subtract ~7 yd from Smart Distance to estimate on-course carry. | Working as intended. |
+| Cheat sheet shows huge distances (driver 280, 7i 175) | Old cheat sheet (pre-2026-06) used Tour-pro coefficient (2.3 yd/mph). Inflated every distance by 40-80 yd. | Regenerate: `python generate_cheat_sheet.py` (now reads `bag_inventory.csv` for realistic Current carries + adds a Ceiling column). |
+| New cheat sheet shows distances different from `per_club_on_course.csv` | The cheat sheet reads `bag_inventory.csv` (manually-curated, includes user-provided wedge carries). `per_club_on_course.csv` reads Arccos Smart Distance directly. They can diverge if Smart Distance has changed since you last updated the inventory CSV. | Update `bag_inventory.csv` from the latest Smart Distance values, then rerun the cheat sheet. |
 | 7i / 8i p20 column shows ~30 yd in on-course distances | Chunked/topped shots dragging the distribution tail. | This is real data — don't filter it out. The p80 + 80% band tell the cleaner story. |
 | Driver shows -0.30 SG per shot — sounds bad | Per-shot SG below 0 is normal; you're playing par golf, not scratch. -0.30 driver is roughly mid-handicap. | Compare *between* clubs/categories, not against zero. |
 | Arccos sync rate-limited error | The puller enforces 600 s between sync runs. | Wait 10 minutes or skip and sync after the next round. |
@@ -475,8 +518,10 @@ the 9-iron entirely achieves the same end for $0.
 |---|---|---|
 | New GC3 session | Drop the CSV in the repo root, run the GC3 notebook | (none — notebook auto-discovers) |
 | New round played | Sync, regenerate notebook | `python pull_arccos.py --include-gps` then `python build_notebook.py && jupyter nbconvert --execute --inplace Arccos_Course_Analysis.ipynb` |
-| New club added to bag | Update `Book1.xlsx` + `forecast_club_distances.py` constants | `python generate_cheat_sheet.py && python forecast_club_distances.py` |
-| Measured driver / wood swing speed | Update `MEASURED_*` constants in `forecast_club_distances.py` | `python forecast_club_distances.py` |
+| New club added to bag | Add row to `bag_inventory.csv` (set `in_bag=1`), update `Book1.xlsx` for the cheat-sheet swing speed | `python generate_cheat_sheet.py && python forecast_club_distances.py` |
+| Bench a club / swap in an Out-of-Bag club | Flip `in_bag` flag in `bag_inventory.csv` (don't delete the row — keeps history); re-pair the sensor in the Arccos app | After next Arccos sync, `python forecast_club_distances.py` to see the new bag-spacing picture |
+| Measured driver / wood swing speed | Update the matching row in `bag_inventory.csv` (`swing_speed_mph` column) + `Book1.xlsx` for the cheat sheet | `python generate_cheat_sheet.py` |
+| Cheat sheet distances look wrong | Check `bag_inventory.csv` Current carries are accurate; the cheat sheet is just rendering them. Old cheat sheets (pre-2026-06) used Tour-pro coefficients and were systemically inflated. | `python generate_cheat_sheet.py` regenerates |
 
 ### Backing up
 
