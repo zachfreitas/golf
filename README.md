@@ -19,6 +19,8 @@ For the Arccos side, install [`chrisdecali/golf-reports`](https://github.com/chr
 
 **One comprehensive guide:** [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — covers every file, both workflows (GC3 + Arccos), data schemas, and troubleshooting.
 
+**Active worklist:** [`tasks/todo.md`](tasks/todo.md).
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
