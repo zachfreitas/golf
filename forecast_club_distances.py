@@ -1,148 +1,176 @@
-"""Realistic per-club distance forecast.
+"""Per-club distance reference — measured on-course p80 from Arccos where
+available, forecast for the rest. Anchored to your real on-course 7-iron
+performance, not range carry.
 
-Anchors to your MEASURED 7-iron data (74.8 mph club speed, 1.31 smash, 127 yd
-avg carry across 125 shots over 5 GC3 sessions) and projects each other club
-in the bag using:
+Why p80? Arccos's "Smart Distance" is roughly the 80th percentile of recent
+shots — what you can expect to hit on a well-struck strike, not the median
+which gets dragged down by mis-hits. That's what golfers actually plan club
+selection around.
 
-  1. Standard amateur-male club-speed progression (delta-mph from 7i),
-     since Book1.xlsx's per-club speeds are estimates with unrealistically
-     tight (~1 mph) gaps between irons.
-  2. Empirical amateur-male carry-per-mph coefficients (from published
-     TrackMan/Foresight averages), scaled by an efficiency factor that
-     calibrates the 7i row to your measured 127-yd carry — so the model
-     is self-consistent at the anchor point.
-  3. Target smash factors as a diagnostic reference column (what your
-     contact should look like club-by-club; your measured 7i is 1.31
-     vs a target of 1.38).
+Why "last 12 months"? Clubs come and go (you removed a 5-wood, sensors
+re-pair). Older shots include retired clubs and pre-improvement performance.
+12 months captures your current bag and current skill.
+
+Inputs:
+  - ~/golf-data/shots.csv  (Arccos sync output)
+  - Book1.xlsx             (your current bag — source of truth for what clubs
+                            should appear in the output)
 
 Outputs:
-  - realistic_club_distances.csv  — per-club carry + total, current + target
-  - Console table for quick reading
+  - per_club_on_course.csv — one row per club in your current bag
+  - console table
 """
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pandas as pd
 
-# -- Anchor: your measured 7-iron data --------------------------------------
-MEASURED_7I_SPEED = 74.8   # mph club speed, 125-shot average
-MEASURED_7I_SMASH = 1.31   # actual measured
-MEASURED_7I_CARRY = 127.0  # yards, actual measured
+from arccos import load_arccos
 
-# -- Standard amateur-male progression --------------------------------------
-# Club-speed delta (mph) above (+) or below (-) measured 7i.
-# Based on TrackMan/Foresight published amateur-male progression: ~2.5 mph
-# per iron number, larger jumps for hybrids/woods/driver.
+# -- Calibration ------------------------------------------------------------
+# Lookback window for "current" performance (rounds older than this are
+# excluded — they may contain retired clubs / pre-improvement strokes).
+LOOKBACK_MONTHS = 12
+
+# Minimum shots required per club before its measured p80 is trusted.
+# 5 is the smallest sample that yields a reasonably stable 80th percentile
+# (lower than that and one outlier swings the number heavily).
+MIN_SHOTS_FOR_MEASURED = 5
+
+# Your measured GC3 7-iron carry (range, ideal conditions). Used as a
+# secondary reference column so you can see range-vs-course delta.
+GC3_7I_CARRY_YD = 127.0
+
+# Arccos label -> Book1 bag abbreviation. Verified against sensor history
+# and distance ranges (Club 35's p80 is 168 yd which lines up with the 19°
+# 3-hybrid; "Hybrid" tagged is shorter at 156, lines up with the 22° 4H).
+ARCCOS_TO_BAG = {
+    "Driver":         "Dr",
+    "3 Wood":         "3w",
+    "Club 35":        "3h",
+    "Hybrid":         "4h",
+    "5 Iron":         "5i",
+    "6 Iron":         "6i",
+    "7 Iron":         "7i",
+    "8 Iron":         "8i",
+    "9 Iron":         "9i",
+    "Pitching Wedge": "PW",
+    # Wedges (GW/SW/LW) lumped under generic "Wedge" tag — we can't
+    # disambiguate them from Arccos shot distance alone, so they fall
+    # through to the forecast path below.
+}
+
+# Standard amateur-male club-speed delta from 7-iron (mph). Used only for
+# clubs the user has in the bag but Arccos can't measure or disambiguate.
 DELTA_FROM_7I = {
-    "Dr":  +10.0,  # matches Book1.xlsx driver estimate (84 mph)
-    "3w":  +7.0,
-    "3h":  +6.0,
-    "4h":  +4.0,
-    "5i":  +5.0,
-    "6i":  +3.0,
-    "7i":   0.0,
-    "8i":  -2.5,
-    "9i":  -5.0,
-    "PW":  -7.0,
-    "GW": -10.0,  # 52°
-    "SW": -12.0,  # 56°
-    "LW": -14.0,  # 60°
+    "Dr":  +10.0, "3w":  +7.0,  "3h":  +6.0,  "4h":  +4.0,
+    "5i":  +5.0,  "6i":  +3.0,  "7i":   0.0,  "8i":  -2.5,
+    "9i":  -5.0,  "PW":  -7.0,  "GW": -10.0,  "SW": -12.0,  "LW": -14.0,
 }
 
-# Empirical amateur-male carry-per-mph-of-club-speed (yards per mph).
-# These bake in typical launch/spin/contact efficiency for each club type;
-# they are NOT the same as ball-speed-based coefficients. Source: TrackMan
-# Combine published averages for amateur male, mid-handicap.
-CARRY_COEFF = {
-    "Dr": 2.47, "3w": 2.24, "3h": 2.05, "4h": 1.95,
-    "5i": 1.93, "6i": 1.88, "7i": 1.83, "8i": 1.73, "9i": 1.67,
-    "PW": 1.57, "GW": 1.40, "SW": 1.20, "LW": 1.00,
+# Empirical TOTAL-distance coefficient (yd per mph of club speed). Includes
+# typical roll/bounce on tee + fairway lies. Calibrated against amateur-male
+# Arccos distributions, then scaled by per-user efficiency calibrated to
+# their actual 7i performance.
+TOTAL_COEFF = {
+    "Dr": 2.55, "3w": 2.40, "3h": 2.15, "4h": 2.00,
+    "5i": 1.92, "6i": 1.85, "7i": 1.78, "8i": 1.70, "9i": 1.60,
+    "PW": 1.50, "GW": 1.30, "SW": 1.10, "LW": 0.90,
 }
 
-# Target smash factor by club — what your contact SHOULD produce with clean
-# center-face strike and proper AoA. Your measured 7i smash is 1.31; target
-# is 1.38 (a 0.07 gap, which is what's listed in your existing analysis).
-TARGET_SMASH = {
-    "Dr": 1.47, "3w": 1.43, "3h": 1.41, "4h": 1.40,
-    "5i": 1.39, "6i": 1.38, "7i": 1.38, "8i": 1.36, "9i": 1.34,
-    "PW": 1.32, "GW": 1.28, "SW": 1.26, "LW": 1.23,
-}
 
-# Typical roll factor (carry -> total) by club, firm fairways assumed.
-ROLL = {
-    "Dr": 1.15, "3w": 1.12, "3h": 1.10, "4h": 1.08,
-    "5i": 1.06, "6i": 1.05, "7i": 1.04, "8i": 1.03, "9i": 1.02,
-    "PW": 1.02, "GW": 1.01, "SW": 1.01, "LW": 1.00,
-}
+def measured_p80() -> dict[str, tuple[float, int]]:
+    """Compute last-12-month p80 distance per Arccos club label.
+
+    Returns mapping bag_abbr -> (p80_yd, n_shots) for clubs with enough data.
+    """
+    d = load_arccos()
+    s = d.shots.copy()
+    s["date"] = pd.to_datetime(s["date"], errors="coerce")
+    s = s.dropna(subset=["date"])
+    cutoff = s["date"].max() - pd.DateOffset(months=LOOKBACK_MONTHS)
+    s = s[(s["date"] >= cutoff)
+          & ~s["is_putt"].astype(bool)
+          & (s["shot_distance_yd"] > 0)]
+
+    out: dict[str, tuple[float, int]] = {}
+    for arccos_label, bag_abbr in ARCCOS_TO_BAG.items():
+        grp = s[s["club"] == arccos_label]
+        if len(grp) >= MIN_SHOTS_FOR_MEASURED:
+            out[bag_abbr] = (round(grp["shot_distance_yd"].quantile(0.8), 0),
+                             len(grp))
+    return out
 
 
 def main() -> None:
+    measured = measured_p80()
+
+    # Anchor: user's actual on-course 7-iron p80, falling back to GC3 if
+    # Arccos doesn't have 10+ recent 7-iron shots.
+    anchor_p80 = measured.get("7i", (GC3_7I_CARRY_YD, 0))[0]
+    anchor_speed = 74.8  # measured 7i club speed from GC3 sessions
+    efficiency = anchor_p80 / (anchor_speed * TOTAL_COEFF["7i"])
+
     bag = pd.read_excel("Book1.xlsx")[
         ["Club Abbriation", "Club", "Loft"]
     ].rename(columns={"Club Abbriation": "abbr"})
-
     bag["loft_deg"] = bag["Loft"].astype(str).apply(
         lambda s: float(re.search(r"(\d+\.?\d*)", s).group(1))
     )
-    bag["club_speed_mph"] = bag["abbr"].map(
-        lambda a: MEASURED_7I_SPEED + DELTA_FROM_7I.get(a, 0.0)
-    )
-
-    # Calibrate efficiency to user's measured 7i carry.
-    eff_current = MEASURED_7I_CARRY / (MEASURED_7I_SPEED * CARRY_COEFF["7i"])
-    # Target efficiency assumes cleaner strike, optimal launch & spin
-    # (your existing GC3 diagnostics already note spin and contact as the
-    # priority fixes). A ~6% efficiency gain is the realistic ceiling for an
-    # amateur after dialing in launch/spin without raising swing speed.
-    eff_target = min(0.99, eff_current * 1.06)
 
     rows = []
     for _, r in bag.iterrows():
         abbr = r["abbr"]
-        if abbr not in CARRY_COEFF:
+        if abbr not in DELTA_FROM_7I:
             continue
-        speed = r["club_speed_mph"]
-        coeff = CARRY_COEFF[abbr]
-        roll = ROLL[abbr]
-        smash_tgt = TARGET_SMASH[abbr]
 
-        carry_now = speed * coeff * eff_current
-        carry_tgt = speed * coeff * eff_target
+        if abbr in measured:
+            p80, n = measured[abbr]
+            source = f"Arccos last {LOOKBACK_MONTHS}mo (n={n})"
+        else:
+            speed = anchor_speed + DELTA_FROM_7I[abbr]
+            p80 = round(speed * TOTAL_COEFF[abbr] * efficiency, 0)
+            source = "forecast"
+
+        gc3 = GC3_7I_CARRY_YD if abbr == "7i" else None
+        delta = (gc3 - p80) if gc3 is not None else None
 
         rows.append({
             "Club": f"{abbr} ({r['loft_deg']:g} deg)",
-            "Club Speed (mph)": round(speed, 1),
-            "Target Smash": f"{smash_tgt:.2f}",
-            "Carry now (yd)": round(carry_now),
-            "Carry target (yd)": round(carry_tgt),
-            "Total now (yd)": round(carry_now * roll),
-            "Total target (yd)": round(carry_tgt * roll),
-            "Gap to next (yd)": None,  # filled below
+            "On-course p80 (yd)": int(p80),
+            "Source": source,
+            "GC3 carry (yd)": int(gc3) if gc3 is not None else "",
+            "Range vs course": f"{int(delta):+d}" if delta is not None else "",
         })
 
     out = pd.DataFrame(rows)
 
-    # Compute carry gap to the NEXT shorter club.
+    # Gap to next-shorter club (carry diff between consecutive bag positions).
+    out["Gap to next (yd)"] = ""
     for i in range(len(out) - 1):
-        out.at[i, "Gap to next (yd)"] = int(
-            out.iloc[i]["Carry now (yd)"] - out.iloc[i + 1]["Carry now (yd)"]
-        )
+        gap = out.iloc[i]["On-course p80 (yd)"] - out.iloc[i + 1]["On-course p80 (yd)"]
+        flag = ""
+        if gap < 6:
+            flag = "  [TIGHT]"
+        elif gap > 18:
+            flag = "  [WIDE]"
+        out.at[i, "Gap to next (yd)"] = f"{int(gap):>3d}{flag}"
 
-    print("\n=== REALISTIC PER-CLUB DISTANCES ===")
-    print(f"Anchored to measured 7i: {MEASURED_7I_SPEED} mph @ "
-          f"{MEASURED_7I_SMASH} smash = {MEASURED_7I_CARRY} yd carry")
-    print(f"Efficiency vs amateur-male average: now {eff_current:.2f}, "
-          f"target {eff_target:.2f} (with cleaner strike + better launch/spin)\n")
+    print(f"\n=== ON-COURSE p80 DISTANCES (last {LOOKBACK_MONTHS} months) ===")
+    print(f"Anchored to 7i p80 = {anchor_p80:.0f} yd @ {anchor_speed} mph")
+    print(f"  Efficiency factor: {efficiency:.3f} (vs amateur-male average 1.000)")
+    print()
     print(out.to_string(index=False))
 
     print("\nGap interpretation:")
-    print("  8-12 yd  = ideal (clean separation between clubs)")
-    print("  <8 yd    = TIGHT (clubs overlap in real conditions)")
-    print("  >15 yd   = WIDE (consider gap club)\n")
+    print("  6-15 yd  = healthy spacing")
+    print("  <6 yd    = TIGHT (clubs do same job)")
+    print("  >18 yd   = WIDE (gap between clubs is hard to play)\n")
 
-    out.to_csv("realistic_club_distances.csv", index=False)
-    print("Saved: realistic_club_distances.csv")
+    out.to_csv("per_club_on_course.csv", index=False)
+    print("Saved: per_club_on_course.csv")
 
 
 if __name__ == "__main__":
