@@ -16,6 +16,7 @@ and why. This is the single comprehensive doc for the project.
 8. [Current diagnostic findings](#8-current-diagnostic-findings)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Maintenance](#10-maintenance)
+11. [Targeted diagnostics notebook](#11-targeted-diagnostics-notebook)
 
 ---
 
@@ -64,6 +65,10 @@ Every file committed to this repo, what it is, and when to use it.
 | `arccos/__init__.py` | Re-exports `load_arccos` and `ArccosData`. | Convenience. |
 | `Arccos_Course_Analysis.ipynb` | The four-section course analysis: SG by category, per-club on-course carries, course-management decisions, practice priorities. Generated from `build_notebook.py`. | Open after each Arccos sync to see updated trends. |
 | `build_notebook.py` | Source of truth for the Arccos notebook. Plain Python (diff-friendly); regenerates the .ipynb on demand. | Edit this, not the notebook, when adding/modifying analyses. |
+| `arccos/diagnostics.py` | Targeted analytical helpers: 125-150 yd approach deep-dive, putt make-% by distance, lie-penalty matrix, Twin Oaks hole-by-hole. Imported by the diagnostics notebook. | Import directly if you want to slice the data yourself. |
+| `Arccos_Targeted_Diagnostics.ipynb` | Deep-dive notebook focused on the four highest-stroke-ROI questions. Generated from `build_diagnostics_notebook.py`. See [§11](#11-targeted-diagnostics-notebook). | Open when you want to decide what specifically to practice. |
+| `build_diagnostics_notebook.py` | Source of truth for the diagnostics notebook. | Edit this, not the notebook, when modifying the deep-dives. |
+| `bag_inventory.csv` | Authoritative bag inventory — every club you own, with `in_bag` flag distinguishing carried vs bench, plus shaft / loft / lie / measured carry / measured swing speed / data source. | Update when you add/swap a club; cross-check against Arccos `paired_bag` to confirm sensor pairings. |
 
 ### Project housekeeping
 
@@ -335,10 +340,52 @@ picture changes.
 
 ### Bag composition
 
-**Current paired bag (14 clubs):** Driver Qi10 (217), 3-Wood Qi10 (198),
-3-Hybrid Qi10 Rescue (182), 4-Hybrid Qi10 Rescue (166), P770 5i-PW (153→107),
-3× MG4 wedges 52°/56°/60° (83/65/46), Scotty Cameron GOLO putter. All
-Smart Distances in yards.
+Source of truth: [`bag_inventory.csv`](../bag_inventory.csv) at the repo root.
+Combines your fitted-bag specs (shaft, loft, lie, swing weight, model year)
+with measured / estimated distances. The `in_bag=1` flag is what's currently
+carried; `in_bag=0` rows are owned-but-bench (free swaps, no purchase needed).
+
+#### Currently carried (14 clubs)
+
+| Club | Loft | Brand / Model | Shaft | Carry (yd) | Total (yd) | Gap | Swing speed (mph) | Source |
+|---|---:|---|---|---:|---:|---:|---:|---|
+| Driver | 10.5° | TaylorMade Qi10 Driver | Speeder NX TCS 55g Stiff | 195 | 217 | 19 | 85 | est |
+| 3 Wood | 15° | TaylorMade Qi10 Fairway | Speeder NX TCS 55g Stiff | 178 | 198 | 16 | 82 | est |
+| 3 Hybrid | 19° | TaylorMade Qi10 Rescue | Speeder NX TCS 59g Stiff | 168 | 182 | 16 | 81 | Arccos |
+| 4 Hybrid | 22° | TaylorMade Qi10 Rescue | Speeder NX TCS 59g Stiff | 155 | 166 | 13 | 79 | Arccos |
+| 5 Iron | 25.5° | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | 143 | 153 | 12 | 80 | Arccos |
+| 6 Iron | 29° | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | 133 | 141 | 12 | 78 | Arccos |
+| **7 Iron** | **33°** | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | **127** | 129 | 5 | **74.8** | **GC3 measured** |
+| 8 Iron | 37° | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | 120 | 124 | 16 | 72 | Arccos |
+| 9 Iron | 41° | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | 105 | 108 | 1 ⚠ | 70 | Arccos |
+| PW Iron | 46° | TaylorMade P770 (2022) | Mitsubishi MMT 74g Stiff | 104 | 107 | 24 ⚠ | 68 | Arccos |
+| 52° Wedge | 52° (9° bounce) | TaylorMade MG4 | TT DG Tour Issue 115g | 75 | 75 | 17 | 65 | **user** |
+| 56° Wedge | 56° (12° bounce) | TaylorMade MG4 | TT DG Tour Issue 115g | 65 | 65 | 10 | 63 | **user** |
+| 60° Wedge | 60° (10° bounce) | TaylorMade MG4 | TT DG Tour Issue 115g | 46 | 46 | 19 | 61 | **user** |
+| Putter | 3.5° | Scotty Cameron Super Select GOLO 6 | Steel | — | — | — | — | — |
+
+**Source legend:**
+- **GC3 measured** = directly observed on Foresight GC3 launch monitor
+- **Arccos** = pulled from Arccos Smart Distance (`_cache_raw/clubs_v6.json`)
+- **user** = numbers you provided directly (wedges)
+- **est** = forecast from the 7i anchor using standard amateur speed-delta + per-club roll model. Confidence drops at the top of the bag (Driver/3W) — get measured driver data on the GC3 to tighten.
+
+**Notes:**
+- *Carry* is on-course expected carry on a struck shot; *Total* is Arccos Smart Distance (carry + roll).
+- Gap is distance to the next-shorter club in the bag. ⚠ flags: 9i/PW overlap at 1 yd, PW→GW jump of 24 yd.
+- Putter row has no distance/speed for the same reason it's irrelevant.
+
+#### Owned, not currently carried (3 clubs)
+
+| Club | Loft | Brand / Model | Loft equivalent to |
+|---|---:|---|---|
+| 5 Wood | 18° | TaylorMade Qi10 Fairway | 3-Hybrid |
+| 7 Wood | 21° | TaylorMade Qi10 Fairway | 4-Hybrid |
+| 5 Hybrid | 25° | TaylorMade Qi10 Rescue | 5-Iron (or 9-Wood) |
+
+These three are loft-equivalent to clubs already in the bag, so they're
+**free swaps** — try a 5W in place of the 3-Hybrid, or a 5-Hybrid in place
+of the 5-Iron, depending on trajectory preference and course conditions.
 
 ### Real bag-spacing issues
 
@@ -452,3 +499,81 @@ by re-syncing.
 
 Move it to `docs/archive/` with a `.md` header explaining why and when. Don't
 delete; the project's history is its own diagnostic.
+
+---
+
+## 11. Targeted diagnostics notebook
+
+`Arccos_Targeted_Diagnostics.ipynb` (generated from
+`build_diagnostics_notebook.py`) is a focused complement to the broader
+`Arccos_Course_Analysis.ipynb`. Where the course-analysis notebook answers
+"what's happening across my game," this one answers "what specifically
+should I do about it."
+
+**Four sections, all backed by helpers in `arccos/diagnostics.py`:**
+
+### §1 — 125-150 yd approach deep-dive
+
+Function: `diagnostics.approach_band_deepdive(data, lo=125, hi=150)`
+
+Slices every approach shot in the band and reports per-shot SG by:
+- **Club used** — surfaces which iron/hybrid in this range is leaking most
+- **Lie** — quantifies whether rough/tee/fairway is more costly here
+- **Wind bucket** — whether wind exacerbates the leak
+
+Current finding (50-round window): 162 shots, −68 SG total. Surprisingly,
+**rough is your best lie in this band (−0.28) and tee (par-3s) is worst
+(−0.57)**. Suggests the leak isn't approach-from-trouble, it's par-3
+tee shots specifically.
+
+### §2 — Putt make-% by distance
+
+Function: `diagnostics.putt_make_by_distance(data)`
+
+First-putt-only (Arccos's phantom 0-distance "putts" are filtered out),
+bucketed by feet, with PGA Tour benchmark overlay.
+
+Current finding: you're **at or above Tour from 12 ft+**, but bleeding from
+**3-12 ft** (54.5% / 25% / 17% vs Tour 88% / 58% / 33%). The −3.1 SG/round
+putting leak is almost entirely short putts; lag distance control is fine.
+Practice priority: 5-12 ft straight putts.
+
+### §3 — Lie-penalty matrix
+
+Function: `diagnostics.lie_penalty_matrix(data)`
+
+Per-club Smart Distance broken out by lie (tee / fairway / rough / sand)
+from `clubs.csv` terrain columns. **Rough penalty** = fairway distance −
+rough distance.
+
+Use this to anchor course-management decisions in numbers: if your driver
+loses 15 yd from the rough but you can reach the green from there, vs
+3-wood loses 5 yd from the rough — the conservative tee shot may still
+let you attack the green.
+
+### §4 — Twin Oaks hole-by-hole
+
+Function: `diagnostics.twin_oaks_hole_heatmap(data, course_name="Twin Oaks GC")`
+
+Per-hole average score-to-par across all rounds at your home course
+(≥30 rounds in the data), ranked from worst-bleed to best-scoring.
+
+Current finding: hole 1 (par 4) is your single biggest bleed at +1.58
+to par average. Hole 9 close behind at +1.52. Holes 5, 12, 15, 17 are
+your scoring opportunities (+0.5 to +0.8 over par).
+
+### How to re-run
+
+```bash
+python build_diagnostics_notebook.py
+jupyter nbconvert --to notebook --execute --inplace Arccos_Targeted_Diagnostics.ipynb
+```
+
+Or just open the .ipynb in Jupyter and Run All.
+
+### When to add a new section
+
+Add a new analytical function to `arccos/diagnostics.py`, then add a
+markdown + code cell pair to `build_diagnostics_notebook.py`. Regenerate
+the notebook and re-execute. The notebook itself is a generated artifact —
+never edit it directly.

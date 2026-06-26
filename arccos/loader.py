@@ -68,19 +68,25 @@ class ArccosData:
     shots: pd.DataFrame
     clubs: pd.DataFrame       # puller's clubs.csv — MIXES paired + unpaired
     paired_bag: pd.DataFrame  # authoritative current bag from clubs_v6.json
+    handicaps: pd.DataFrame   # per-round drive/approach/chip/sand/putt hcp time series
+    courses: pd.DataFrame     # per-course slope/rating/lat-lng from courses/{id}.json
+    round_dash: dict          # round_id -> per-round dash detail (SG splits, pace, hole scores)
     store: Path
 
     def summary(self) -> str:
         return (
             f"Arccos store: {self.store}\n"
-            f"  rounds:     {len(self.rounds):>4d}  "
+            f"  rounds:      {len(self.rounds):>4d}  "
             f"date range {self._date_range(self.rounds)}\n"
-            f"  holes:      {len(self.holes):>4d}\n"
-            f"  shots:      {len(self.shots):>4d}  "
+            f"  holes:       {len(self.holes):>4d}\n"
+            f"  shots:       {len(self.shots):>4d}  "
             f"GPS={'yes' if 'start_lat' in self.shots.columns else 'no'}\n"
-            f"  clubs.csv:  {len(self.clubs):>4d}  (paired + unpaired, mixed)\n"
-            f"  paired bag: {len(self.paired_bag):>4d}  "
-            f"(authoritative — from clubs_v6.json)"
+            f"  clubs.csv:   {len(self.clubs):>4d}  (paired + unpaired, mixed)\n"
+            f"  paired bag:  {len(self.paired_bag):>4d}  "
+            f"(authoritative — from clubs_v6.json)\n"
+            f"  handicaps:   {len(self.handicaps):>4d}  (per-round shot-type hcp series)\n"
+            f"  courses:     {len(self.courses):>4d}  (slope/rating from courses/*.json)\n"
+            f"  round_dash:  {len(self.round_dash):>4d}  (per-round SG splits, pace, hole scores)"
         )
 
     def paired_labels(self) -> set[str]:
@@ -155,6 +161,76 @@ def _read_paired_bag(store_path: Path) -> pd.DataFrame:
     ).reset_index(drop=True)
 
 
+def _read_handicaps(store_path: Path) -> pd.DataFrame:
+    """Read handicaps.json -> per-round handicap-by-shot-type time series."""
+    src = store_path / "_cache_raw" / "handicaps.json"
+    if not src.is_file():
+        return pd.DataFrame()
+    raw = json.loads(src.read_text(encoding="utf-8"))
+    rows = raw.get("handicaps", [])
+    if not rows:
+        return pd.DataFrame()
+    return pd.DataFrame(rows)
+
+
+def _read_courses(store_path: Path) -> pd.DataFrame:
+    """Read courses/*.json -> per-course metadata (slope, rating, location)."""
+    src_dir = store_path / "_cache_raw" / "courses"
+    if not src_dir.is_dir():
+        return pd.DataFrame()
+    rows = []
+    for path in sorted(src_dir.glob("*.json")):
+        try:
+            c = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        # Flatten tees: keep the longest tee's slope+rating per course.
+        tees = c.get("courseTees") or []
+        best_slope, best_rating, best_tee_name = None, None, None
+        for t in tees:
+            slope = t.get("slope")
+            rating = t.get("rating")
+            if slope is not None and rating is not None:
+                if best_slope is None or (t.get("distance") or 0) > 0:
+                    best_slope = slope
+                    best_rating = rating
+                    best_tee_name = t.get("name")
+        rows.append({
+            "course_id": c.get("courseId"),
+            "name": c.get("name"),
+            "city": c.get("city"),
+            "state": c.get("state"),
+            "lat": c.get("latitude"),
+            "lng": c.get("longitude"),
+            "mens_par": c.get("mensPar"),
+            "no_of_holes": c.get("noOfHoles"),
+            "best_tee_name": best_tee_name,
+            "slope": best_slope,
+            "rating": best_rating,
+            "last_played_date": c.get("lastPlayedDate"),
+        })
+    return pd.DataFrame(rows)
+
+
+def _read_round_dash(store_path: Path) -> dict:
+    """Read rounds/*_dash.json -> {round_id: dash_dict}.
+
+    Each value has sections: overall (with paceOfPlay, holeScores),
+    driving, approach, short, putting (with sga, historicSga, accuracy splits).
+    """
+    src_dir = store_path / "_cache_raw" / "rounds"
+    if not src_dir.is_dir():
+        return {}
+    out = {}
+    for path in sorted(src_dir.glob("*_dash.json")):
+        try:
+            rid = int(path.stem.replace("_dash", ""))
+            out[rid] = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+    return out
+
+
 def load_arccos(store: str | Path | None = None) -> ArccosData:
     """Load all Arccos artifacts from the data store.
 
@@ -177,6 +253,9 @@ def load_arccos(store: str | Path | None = None) -> ArccosData:
     shots = _read_csv(store_path / "shots.csv")
     clubs = _read_csv(store_path / "clubs.csv")
     paired_bag = _read_paired_bag(store_path)
+    handicaps = _read_handicaps(store_path)
+    courses = _read_courses(store_path)
+    round_dash = _read_round_dash(store_path)
 
     # Numeric coercion on the columns we'll actually analyze. Silent — if
     # Arccos schema changes, we fail open (NaNs) instead of blowing up.
@@ -196,7 +275,9 @@ def load_arccos(store: str | Path | None = None) -> ArccosData:
             shots[col] = pd.to_numeric(shots[col], errors="coerce")
 
     return ArccosData(rounds=rounds, holes=holes, shots=shots, clubs=clubs,
-                      paired_bag=paired_bag, store=store_path)
+                      paired_bag=paired_bag, handicaps=handicaps,
+                      courses=courses, round_dash=round_dash,
+                      store=store_path)
 
 
 if __name__ == "__main__":

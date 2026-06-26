@@ -13,6 +13,8 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [x] Recalibrate `forecast_club_distances.py` to use Smart Distance as the primary source with last-12-mo p80 cross-check
 - [x] Document distance-metric distinctions (median vs p80 vs Smart Distance vs GC3 carry vs total) in USER_GUIDE §7
 - [x] Diagnose loft-vs-swing question: distance progression issues at 7i/8i/PW are SWING-related, not loft-related → NO loft adjustments recommended
+- [x] **Round 2 analyses**: extended loader (handicaps, per-round dash, course slope/rating), built `arccos/diagnostics.py` (4 functions), shipped `Arccos_Targeted_Diagnostics.ipynb`
+- [x] Created `bag_inventory.csv` as authoritative bag source (14 in-bag + 3 owned-but-bench, with shaft/loft/measured carry/swing speed + data source provenance)
 
 ## Decisions reached
 
@@ -32,8 +34,11 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [ ] Per-wedge gapping session with launch monitor — three MG4 wedges share generic `Wedge` label in shots.csv, so per-wedge p80 isn't disambiguated by Arccos data alone
 
 ### Practice priorities (in order of stroke ROI)
+- [ ] **Short putts 5-12 ft** — diagnostics §2 confirms this is the putting leak. Tour makes 33-58% in this range; you make 17-25%. 1 hour/week of straight-line drills.
+- [ ] **Par-3 tee shots in 125-150 yd range** — diagnostics §1 shows tee lie loses 0.57 SG/shot, worst lie in this band. Practice 7i / 6i full swings from a mat to a target.
 - [ ] **7i / 8i strike improvement on the GC3.** Lift smash 1.31 → 1.35 to attack the 125-150 yd approach SG leak (−0.42 SG/shot, biggest single bleed at ~73 strokes over 50 rounds)
 - [ ] Consider lessons specifically targeting iron contact + spin (current 7i spin 4924 vs target 6500-7500)
+- [ ] Hole 1 + hole 9 at Twin Oaks (your worst at +1.58 / +1.52 to par) — pre-round visualization + clear strategy
 
 ### Upstream / tooling
 - [ ] Open upstream PR on `chrisdecali/golf-reports` for the `None`-hole patches in `pull_arccos.py` (lines 530, 637)

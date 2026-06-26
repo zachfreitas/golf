@@ -5,5 +5,6 @@ Reads CSV artifacts produced by chrisdecali/golf-reports pull_arccos.py
 DataFrames ready for analysis.
 """
 from arccos.loader import ArccosData, load_arccos
+from arccos import diagnostics
 
-__all__ = ["ArccosData", "load_arccos"]
+__all__ = ["ArccosData", "load_arccos", "diagnostics"]

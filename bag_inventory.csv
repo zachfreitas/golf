@@ -1,0 +1,18 @@
+in_bag,status,club,similar_to,loft,bounce,length_in,lie_deg,sw,volume_cc,brand,model,model_year,shaft_model,shaft_material,stiffness,shaft_weight_g,torque,launch,spin,carry_yd,total_carry_yd,gap_yd,swing_speed_mph,source
+1,In Bag,Driver,,10.5,,45.75,58,D4,460,TaylorMade,Qi10 Driver,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,55,3.6,High,Mid,195,217,19,85,arccos_smart+est_roll;7i_delta
+1,In Bag,3 Wood,,15,,43.25,58.5,D3,195,TaylorMade,Qi10 Fairway,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,55,3.6,High,Mid,178,198,16,82,arccos_smart+est_roll;7i_delta
+0,Out of Bag,5 Wood,3 Hybrid,18,,42.25,59.5,D3,175,TaylorMade,Qi10 Fairway,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,55,3.6,High,Mid,,,,,not_currently_bagged
+0,Out of Bag,7 Wood,4 Hybrid,21,,41.75,60,D3,175,TaylorMade,Qi10 Fairway,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,55,3.6,High,Mid,,,,,not_currently_bagged
+1,In Bag,3 Hybrid,5 Wood,19,,40.75,58,D3,,TaylorMade,Qi10 Rescue,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,59,2.7,High,Mid,168,182,16,81,arccos_smart+est_roll;7i_delta
+1,In Bag,4 Hybrid,7 Wood,22,,40.25,58.5,D3,,TaylorMade,Qi10 Rescue,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,59,2.7,High,Mid,155,166,13,79,arccos_smart+est_roll;7i_delta
+0,Out of Bag,5 Hybrid,9 Wood,25,,39.75,59,D3,,TaylorMade,Qi10 Rescue,2024,FUJIKURA Speeder NX TCS,Graphite,Stiff,59,2.7,High,Mid,,,,,not_currently_bagged
+1,In Bag,5 Iron,4 Hybrid,25.5,,38,61.5,D1,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,143,153,12,80,arccos_smart+est_roll;7i_delta
+1,In Bag,6 Iron,5 Hybrid,29,,37.5,62,D1,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,133,141,12,78,arccos_smart+est_roll;7i_delta
+1,In Bag,7 Iron,,33,,37,62.5,D1,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,127,129,5,74.8,GC3_measured;arccos_smart;GC3_measured
+1,In Bag,8 Iron,,37,,36.5,63,D1,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,120,124,16,72,arccos_smart+est_roll;7i_delta
+1,In Bag,9 Iron,,41,,36,63.5,D1,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,105,108,1,70,arccos_smart+est_roll;7i_delta
+1,In Bag,PW Iron,,46,,35.75,64,D2,,TaylorMade,P770 IRONS 2022,2024,Mitsubishi MMT,Graphite,Stiff,74,3.7,Mid,Mid,104,107,24,68,arccos_smart+est_roll;7i_delta
+1,In Bag,52 Wedge,,52,9,35.50,64,D3,,TaylorMade,MG4,2023,TRUE TEMPER DYNAMIC GOLD TOUR ISSUE,Steel,W,115,,,,75,75,17,65,user_provided;7i_delta
+1,In Bag,56 Wedge,,56,12,35.25,64,D5,,TaylorMade,MG4,2023,TRUE TEMPER DYNAMIC GOLD TOUR ISSUE,Steel,W,115,,,,65,65,10,63,user_provided;7i_delta
+1,In Bag,60 Wedge,,60,10,35,64,D5,,TaylorMade,MG4,2023,TRUE TEMPER DYNAMIC GOLD TOUR ISSUE,Steel,W,115,,,,46,46,19,61,user_provided;7i_delta
+1,In Bag,Putter,,3.5,,35,70,,,Scotty Cameron,Super Select GOLO 6,2023,,Steel,N/A,,,,,,,,
