@@ -17,6 +17,7 @@ and why. This is the single comprehensive doc for the project.
 9. [Troubleshooting](#9-troubleshooting)
 10. [Maintenance](#10-maintenance)
 11. [Targeted diagnostics notebook](#11-targeted-diagnostics-notebook)
+12. [Scoring Method Level 1 workflow](#12-scoring-method-level-1-workflow)
 
 ---
 
@@ -102,6 +103,9 @@ Every file committed to this repo, what it is, and when to use it.
 | `arccos/diagnostics.py` | Targeted analytical helpers: 125-150 yd approach deep-dive, putt make-% by distance, lie-penalty matrix, Twin Oaks hole-by-hole. Imported by the diagnostics notebook. | Import directly if you want to slice the data yourself. |
 | `notebooks/Arccos_Targeted_Diagnostics.ipynb` | Deep-dive notebook focused on the four highest-stroke-ROI questions. Generated from `scripts/build_diagnostics_notebook.py`. See [§11](#11-targeted-diagnostics-notebook). | Open when you want to decide what specifically to practice. |
 | `scripts/build_diagnostics_notebook.py` | Source of truth for the diagnostics notebook. | Edit this, not the notebook, when modifying the deep-dives. |
+| `arccos/scoring_method.py` | Will Robins Scoring Method Level 1 analysis module. Per-hole metrics: `in_play`, `strokes_to_zone`, `strokes_in_zone`, `zone_reached_in_reg`, `down_in_3`, `bogey_ceiling_met`, `blow_up`. Functions: `select_last_n_rounds`, `compute_hole_metrics`, `format_scorecard_df`, `aggregate_summary`, `score_if_bogey_ceiling_held`, `derive_practice_priorities`. See [§12](#12-scoring-method-level-1-workflow). | Import directly to script your own L1 slice, or run through the notebook. |
+| `notebooks/Scoring_Method_L1.ipynb` | Per-hole scorecards + aggregate dashboard + Robins-lens practice-priority read over the last N rounds. Also produces `outputs/scoring_method_L1.xlsx` as a side effect. Generated from `C:/tmp/build_l1_notebook.py` — regenerate the notebook by running that script. | Open after every Arccos sync to see the L1 read on your most recent play. Change `N` at the top of the setup cell to rescope the window. |
+| `outputs/scoring_method_L1.xlsx` | Excel workbook: Summary sheet + one printable per-round scorecard sheet per round in the lookback window. Color-coded Y/N cells for the four "did I meet the target" columns. | Print and mark up on the course, or reference during practice planning. |
 | `data/bag_inventory.csv` | Authoritative bag inventory — every club you own, with `in_bag` flag distinguishing carried vs bench, plus shaft / loft / lie / measured carry / measured swing speed / data source. | Update when you add/swap a club; cross-check against Arccos `paired_bag` to confirm sensor pairings. |
 
 ### Project housekeeping
@@ -696,3 +700,146 @@ Add a new analytical function to `arccos/diagnostics.py`, then add a
 markdown + code cell pair to `scripts/build_diagnostics_notebook.py`. Regenerate
 the notebook and re-execute. The notebook itself is a generated artifact —
 never edit it directly.
+
+---
+
+## 12. Scoring Method Level 1 workflow
+
+A separate lens on the Arccos data, framed around the **Will Robins Scoring
+Method (Level 1)** rather than strokes gained.
+
+### The idea in one paragraph
+
+Instead of asking "how many strokes did I lose vs scratch in each category?"
+(the SG lens), Level 1 splits every hole into two phases: (1) get the ball
+inside 100 yd of the pin, then (2) get down in three from there. If you keep
+the ball in play AND get down in three on every hole, the arithmetic caps
+your worst possible score at bogey — regardless of par. Bogey golf on every
+hole is roughly a mid-teens handicap; the promise of L1 is that if you can
+execute this simple structure reliably, everything else is upside.
+
+### Metric definitions
+
+Per hole, computed in `arccos/scoring_method.py`:
+
+| Column | Definition |
+|---|---|
+| `in_play` | No penalty stroke on this hole (`penalties == 0`). |
+| `strokes_to_zone` | Number of full-swing shots that **started** outside 100 yd from the pin. (A par-3 shorter than 100 yd starts inside the zone → 0.) |
+| `strokes_in_zone` | Total shots minus `strokes_to_zone`. Includes putts. |
+| `zone_reached_in_reg` | Reached the zone in the par-or-better target: par 3/4 need ≤1, par 5 needs ≤2. |
+| `down_in_3` | `strokes_in_zone` ≤ 3. **This is the headline stat.** |
+| `bogey_ceiling_met` | Robins' full promise: `strokes_to_zone ≤ (par − 2)` AND `down_in_3` — meaning this hole's score was at worst bogey. |
+| `blow_up` | Double bogey or worse (`score_to_par >= 2`). |
+
+### The counterfactual arithmetic
+
+| Par | To-Zone target | In-Zone target | Bogey ceiling |
+|-----|----------------|-----------------|---------------|
+| 3   | ≤ 1            | ≤ 3             | 4 |
+| 4   | ≤ 2            | ≤ 3             | 5 |
+| 5   | ≤ 3            | ≤ 3             | 6 |
+
+`score_if_bogey_ceiling_held()` computes: for each hole in the window, what
+would the score have been if you had exactly met the bogey ceiling — par
+where it was met, bogey where it wasn't. That's the "if I had played the L1
+game perfectly" projection.
+
+### What the notebook produces
+
+`notebooks/Scoring_Method_L1.ipynb` — one parameter (`N` at the top of the
+setup cell) controls the lookback window. Sections:
+
+1. **Round selection** — the N most recent rounds by date.
+2. **Per-hole metrics** — the raw substrate for everything downstream.
+3. **Aggregate dashboard** — headline metrics + par-3/4/5 breakdown.
+4. **Practice priorities** — heuristic Robins-lens read from
+   `derive_practice_priorities()`. Rules of thumb:
+   - `in_play_pct` < 85% → tee-shot decision problem
+   - `zone_reg_pct` < 60% → full-swing get-to-zone problem
+   - `d3_rate` < 50% → short game / putting problem (sub-split by `putts_per_hole`)
+   - `blow_up_pct` > 20% → mindset / recovery problem
+5. **The Robins Promise projection** — actual score vs bogey-ceiling
+   counterfactual, per round, with bar chart. "Strokes available if you had
+   executed L1 on every hole."
+6. **Per-round scorecards** — every round in the window, oldest first.
+7. **Trend chart** — all four L1 metrics plotted against time.
+8. **Excel export** — writes `outputs/scoring_method_L1.xlsx` as a byproduct
+   of running the notebook.
+
+### Current read (30-round window: 2024-05-25 to 2026-06-26, 324 holes)
+
+| Metric | Value |
+|---|---:|
+| In-play % | 88% |
+| Zone reached in reg | 34% |
+| **Down-in-3 rate** | **69%** |
+| Bogey-ceiling met | 61% |
+| Blow-ups (dbl+) | 32% |
+| Actual vs Robins ceiling | 1643 vs 1419 |
+
+**Where the leak is:**
+
+| Par | Zone-in-reg % | Avg hole len | Interpretation |
+|---|---:|---:|---|
+| 3 | 95% | 147 yd | Fine — tee shots either start in or near zone |
+| 4 | 14% | 324 yd | **Primary leak** |
+| 5 | 21% | 473 yd | Secondary leak |
+
+The math on par-4s: with driver Smart Distance 217 yd, an average 324-yd
+par-4 leaves 107 yd out after a flushed drive — just outside the 100-yd
+zone line. Reaching zone-in-reg on par-4s requires either (a) a driver that
+carries with a favorable bounce/roll into the zone or (b) a longer hitter.
+At current bag capability, the on-course rule is: **accept the bogey-
+ceiling target (2 strokes to zone) on par-4 > 320 yd, and prioritize
+in-play over distance.**
+
+The actionable Robins-lens practice/strategy plan is captured in
+`tasks/todo.md` under "Scoring Method Level 1 — Zone-in-Reg practice plan."
+
+### How this complements the SG-based diagnostics
+
+| Question | Which lens answers it |
+|---|---|
+| "Which shot type is bleeding strokes vs scratch?" | SG (`Arccos_Course_Analysis`, §3, §11) |
+| "Which specific yardage band on approach?" | SG deep-dive (§11.1) |
+| "On any given hole, is my full-swing or short game bleeding?" | Level 1 (this section) |
+| "If I execute the L1 game, what's my worst-case score?" | Level 1 (this section) |
+
+Both lenses are simultaneously true. Use SG for range/mechanics prioritization,
+use L1 for on-course decision-making and mindset.
+
+### Attribution
+
+The Scoring Method (levels, "gears", scoring zones, down-in-three promise,
+purposeful practice framing) is the intellectual work of Will Robins. This
+repo implements a derivative analysis inspired by that methodology — none of
+Robins' scorecards, workbooks, or proprietary materials are reproduced. If
+you want the full methodology, buy his scorecards or program at
+[thescoringmethod.com](https://thescoringmethod.com/).
+
+### Re-running
+
+```bash
+# Regenerate the notebook from source
+python C:/tmp/build_l1_notebook.py
+
+# Execute end-to-end (produces Excel as a side effect)
+cd Golf_Analysis
+jupyter nbconvert --to notebook --execute --inplace notebooks/Scoring_Method_L1.ipynb
+```
+
+Or open the notebook in Jupyter and Run All. To change the lookback window,
+edit `LOOKBACK_N` at the top of `C:/tmp/build_l1_notebook.py` (or edit the
+`N =` line in the notebook's setup cell and re-run).
+
+### Next levels (not yet implemented)
+
+The Robins methodology also defines Levels 2-4:
+- **Level 2** — inside 50 yd, down-in-two goal
+- **Level 3** — inside 25 yd, up-and-down conversion
+- **Level 4** — on the green, first-putt proximity + three-putt avoidance
+
+Extending `arccos/scoring_method.py` with L2/L3/L4 functions would follow
+the same shape — different `ZONE_YARDS` constant, different `DOWN_IN_TARGET`,
+different `ZONE_REG_TARGET` map. Tracked in `tasks/todo.md`.

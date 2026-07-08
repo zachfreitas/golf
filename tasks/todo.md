@@ -48,6 +48,24 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [ ] **Test grip strength hypothesis**: 2026-06-30 session shows 5i best strikes at 2,499–3,299 rpm (target 5,500–6,500) and driver at 1,075–1,649 rpm on several shots — well below target. Strong grip closing the face is one plausible cause (reduces spin loft). Test: hit a GC3 session with a deliberately weakened grip and compare spin rates on best strikes vs this baseline.
 - [ ] Hole 1 + hole 9 at Twin Oaks (your worst at +1.58 / +1.52 to par) — pre-round visualization + clear strategy
 
+### Scoring Method Level 1 — Zone-in-Reg practice plan
+Diagnostic (30-round window): 14% zone-in-reg on par-4s, 21% on par-5s. Par-3s are fine (95%). Driver Smart Distance 217 yd is ~7 yd short of what's needed to reach the 100-yd zone on the average 324-yd Twin Oaks par-4. On-course decision-making has higher ROI than swing work here.
+
+**On-course strategy (zero practice — start next round):**
+- [ ] **Every par-4/5 tee: name the shot's purpose OUT LOUD before swinging.** "Reach zone" or "set up zone in 2". If you can't reach zone with this club on this hole, plan the 2-shot sequence. Robins' rule: play the game, not the shot.
+- [ ] **Par-5 3-shot sequence at Twin Oaks (avg 473 yd)**: driver (217) + 4-hybrid (166) = 383 yd traveled, 90 yd remaining → inside the zone in 2. Currently only 21% of par-5s hit this — that's the target %.
+- [ ] **Par-4 under 320 yd**: driver is the correct club. Under 300, take 3W or 3H to guarantee in-play (fairway > 20 yd extra distance for the L1 game).
+- [ ] **Par-4 over 350 yd**: accept bogey-ceiling target (2 strokes to zone). Don't over-swing driver trying to reach — you're 7 yd short even flushed. Play 3W tee + full 7i/6i to zone.
+
+**Purposeful-practice range drills (30-min sessions, once a week):**
+- [ ] **Driver corridor test — 20 balls to a 30-yd-wide corridor.** Pass = 15/20 in the corridor. Fail = driver stays in the bag on tight par-4s until you re-test and pass. Track pass/fail per session in `data/sessions/`.
+- [ ] **Hybrid + 3W corridor test — same rules, 25-yd corridor.** These are your reliability-off-the-tee clubs. If they can't hit the corridor, the whole strategy above collapses.
+- [ ] **"Zone-entry" 6i/7i drill — 10 balls to a 130-yd target.** Success = ends <20 yd wide of target. This is your zone-setting-approach shot after a driver on a 350-yd par-4.
+
+**Mindset (Robins' Key 2 — golfing mindset):**
+- [ ] **After any bad shot, drop one level.** If you were going for the green (Level 4), reset to "get inside 50" (Level 2). If that fails, "get inside 100" (Level 1). Kill the compounding — 32% blow-up rate is the price of chasing after a bad shot.
+- [ ] **Pre-round: pick one L1 metric to focus on for the whole round.** Zone-in-reg, or in-play %, or bogey-ceiling. Track manually on the scorecard. Trying to fix everything = fix nothing.
+
 ### Upstream / tooling
 - [ ] Open upstream PR on `chrisdecali/golf-reports` for the `None`-hole patches in `pull_arccos.py` (lines 530, 637)
 - [ ] Open upstream PR adding clubType 35 to `CLUBTYPE` map (and any other types we discover) — currently surfaces as "Club 35" in shots.csv

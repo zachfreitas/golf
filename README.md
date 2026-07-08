@@ -4,6 +4,7 @@ Personal golf-improvement workspace combining **range data** (Foresight GC3 laun
 
 - **Range side (GC3)** → swing mechanics, club gapping, dispersion, smash factor — see `notebooks/GC3_Golf_Analysis.ipynb`.
 - **Course side (Arccos)** → strokes gained by category, course-management decisions, where strokes are being lost under pressure — see `notebooks/Arccos_Course_Analysis.ipynb` and the deep-dive `notebooks/Arccos_Targeted_Diagnostics.ipynb`.
+- **Scoring Method Level 1 (Robins-lens)** → per-hole in-play / zone-in-reg / down-in-three tracking over the last N rounds, with practice-priorities read — see `notebooks/Scoring_Method_L1.ipynb` (module: `arccos/scoring_method.py`; printable Excel: `outputs/scoring_method_L1.xlsx`). Full workflow in [`docs/USER_GUIDE.md §12`](docs/USER_GUIDE.md#12-scoring-method-level-1-workflow).
 
 ## Repo layout
 
