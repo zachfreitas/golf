@@ -19,6 +19,14 @@ Four functions, one per analysis the Targeted_Diagnostics notebook drives:
       Per-hole average score-to-par and SG contribution at your most-played
       course. Identifies nemesis holes vs scoring opportunities.
 
+  range_vs_course_7i(data, gc3)
+      Compare GC3 range 7-iron distribution to on-course 7-iron from Arccos.
+
+  range_vs_course(data, club_map, gc3, smash_floor)
+      Generalised best-shots vs course comparison across any clubs.
+      Defines "best shots" as solid-contact shots (smash ≥ floor) and
+      compares their p80 carry to Arccos on-course median/p80.
+
 All functions return DataFrames sized for direct display in a notebook.
 Plotting is left to the caller so the diagnostics module stays render-free.
 """
@@ -279,6 +287,145 @@ def range_vs_course_7i(data, gc3: pd.DataFrame | None = None) -> dict:
         "gc3_offline": gc3_offline,
         "arc_total": arc_dist,
     }
+
+
+def range_vs_course(
+    data,
+    club_map: dict | None = None,
+    gc3: pd.DataFrame | None = None,
+    smash_floor: dict | None = None,
+) -> dict:
+    """Compare GC3 best shots to on-course Arccos actuals for any set of clubs.
+
+    "Best shots" = solid-contact shots (smash ≥ smash_floor) from GC3 sessions.
+    Captures what the golfer CAN do vs what they typically produce on course.
+
+    Parameters
+    ----------
+    club_map : {GC3 label → Arccos club name}, e.g.
+               {'Dr': 'Driver', '5i': '5 Iron', '7i': '7 Iron'}
+               Defaults to all clubs present in GC3 sessions that have
+               an Arccos counterpart.
+    gc3 : pre-loaded GC3 DataFrame (calls load_gc3_sessions() if None).
+    smash_floor : {GC3 label → float} minimum smash factor for "solid contact".
+                  Defaults: Driver 1.30, irons 1.25. Shots below the floor are
+                  counted separately as "mishits" but excluded from the best-shot
+                  comparison so a single popup doesn't drag down the pool.
+
+    Returns
+    -------
+    dict keyed by GC3 label, each value is a sub-dict:
+        arc_club          : Arccos club string
+        smash_threshold   : float applied
+        n_all / n_solid / n_mishit : shot counts
+        gc3_all           : _stats dict for all GC3 carry values
+        gc3_solid_carry   : _stats dict for solid-contact GC3 carry
+        arc_total         : _stats dict for Arccos on-course total distance
+        gap_p50           : GC3 solid p50 carry − Arccos p50 total
+        gap_p80           : GC3 solid p80 carry − Arccos p80 total
+        potential_note    : human-readable verdict
+        _gc3_all_series / _gc3_solid_series / _arc_series : raw pd.Series for plotting
+    """
+    if gc3 is None:
+        gc3 = load_gc3_sessions()
+
+    _DEFAULT_MAP = {
+        "Dr":  "Driver",
+        "5i":  "5 Iron",
+        "6i":  "6 Iron",
+        "7i":  "7 Iron",
+        "8i":  "8 Iron",
+        "9i":  "9 Iron",
+        "PW":  "Pitching Wedge",
+    }
+    if club_map is None:
+        available = set(gc3["Club"].unique()) if not gc3.empty else set()
+        club_map = {k: v for k, v in _DEFAULT_MAP.items() if k in available}
+
+    _DEFAULT_SMASH = {"Dr": 1.30, "default": 1.25}
+    if smash_floor:
+        _DEFAULT_SMASH.update(smash_floor)
+
+    s = data.shots_in_bag()
+
+    def _stats(series: pd.Series, label: str) -> dict:
+        if series.empty:
+            return {"label": label, "n": 0}
+        return {
+            "label": label,
+            "n": int(len(series)),
+            "mean": round(series.mean(), 1),
+            "std": round(series.std(), 1),
+            "p20": round(series.quantile(0.20), 1),
+            "p50": round(series.quantile(0.50), 1),
+            "p80": round(series.quantile(0.80), 1),
+            "min": round(series.min(), 1),
+            "max": round(series.max(), 1),
+        }
+
+    results = {}
+
+    for gc3_club, arc_club in club_map.items():
+        club_gc3 = gc3[gc3["Club"] == gc3_club].copy()
+        if club_gc3.empty:
+            continue
+
+        threshold = _DEFAULT_SMASH.get(gc3_club, _DEFAULT_SMASH["default"])
+
+        has_smash = "Smash Factor" in club_gc3.columns
+        solid_mask = (club_gc3["Smash Factor"] >= threshold) if has_smash else pd.Series(True, index=club_gc3.index)
+
+        gc3_all_carry    = club_gc3["Carry"].dropna()
+        gc3_solid_carry  = club_gc3.loc[solid_mask, "Carry"].dropna()
+        gc3_mishit_carry = club_gc3.loc[~solid_mask, "Carry"].dropna() if has_smash else pd.Series(dtype=float)
+
+        arc_shots = s[
+            (s["club"] == arc_club)
+            & (s["shot_distance_yd"] > 30)
+            & ~s["is_putt"].astype(bool)
+        ]
+        arc_dist = arc_shots["shot_distance_yd"].dropna()
+
+        # Gap: GC3 solid carry vs Arccos course total.
+        # On-course total ≈ carry + roll. For a like-for-like comparison we note
+        # that GC3 "Carry" understates on-course total by ~8-10 yd (irons) or
+        # ~20-25 yd (driver) under typical fairway conditions.
+        # We report the raw gap (which will be negative for irons) so the caller
+        # can apply their own roll estimate if desired.
+        g50 = round(gc3_solid_carry.quantile(0.50) - arc_dist.quantile(0.50), 1) if (len(gc3_solid_carry) and len(arc_dist)) else None
+        g80 = round(gc3_solid_carry.quantile(0.80) - arc_dist.quantile(0.80), 1) if (len(gc3_solid_carry) and len(arc_dist)) else None
+
+        if g50 is not None:
+            is_driver = gc3_club in ("Dr", "Driver")
+            roll_adj = 22 if is_driver else 8
+            adj_gap = round(gc3_solid_carry.quantile(0.50) + roll_adj - arc_dist.quantile(0.50), 1)
+            if adj_gap > 10:
+                note = f"⚠️  Potential gap: +{adj_gap} yd vs course median — range carry + roll exceeds on-course average. Improvement possible."
+            elif adj_gap > 0:
+                note = f"✅ On track: +{adj_gap} yd vs course median — range translates well to course."
+            else:
+                note = f"✅ On-course distance matches or exceeds range ({adj_gap} yd) — course conditions or shot selection may differ."
+        else:
+            note = "Insufficient data for comparison."
+
+        results[gc3_club] = {
+            "arc_club": arc_club,
+            "smash_threshold": threshold,
+            "n_all": int(len(gc3_all_carry)),
+            "n_solid": int(len(gc3_solid_carry)),
+            "n_mishit": int(len(gc3_mishit_carry)),
+            "gc3_all": _stats(gc3_all_carry, f"GC3 all shots — carry (yd)"),
+            "gc3_solid_carry": _stats(gc3_solid_carry, f"GC3 solid contact (smash≥{threshold}) — carry (yd)"),
+            "arc_total": _stats(arc_dist, f"Arccos on-course total (yd)"),
+            "gap_p50": g50,
+            "gap_p80": g80,
+            "potential_note": note,
+            "_gc3_all_series": gc3_all_carry,
+            "_gc3_solid_series": gc3_solid_carry,
+            "_arc_series": arc_dist,
+        }
+
+    return results
 
 
 def twin_oaks_hole_heatmap(data, course_name: str = "Twin Oaks GC") -> pd.DataFrame:

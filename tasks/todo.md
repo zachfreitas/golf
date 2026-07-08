@@ -19,6 +19,7 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [x] **Diagnostics §5**: GC3 ↔ Arccos 7-iron range vs course comparison (`range_vs_course_7i`). Surfaces the ~16 yd on-course performance gap and the −7 yd left bias.
 - [x] **Cheat-sheet recalibration**: `scripts/generate_cheat_sheet.py` now reads `data/bag_inventory.csv` for realistic distances (was using Tour-pro 2.3 yd/mph coefficient = +40-80 yd inflation). Added `Carry Ceiling` + `Total Ceiling` columns showing achievable improvement at current swing speed.
 - [x] **Repo reorganization**: Moved root-level mess (22 files) into `data/`, `data/sessions/`, `outputs/`, `scripts/`, `notebooks/`. Scripts now use `REPO_ROOT = Path(__file__).resolve().parent.parent`; notebooks walk up to find `arccos`/`data`. Everything works from any cwd. Fixed pre-existing `asdfasfdfdff` typo in GC3 notebook cell-19.
+- [x] **Scoring Method Level 1** — shipped `arccos/scoring_method.py`, `notebooks/Scoring_Method_L1.ipynb` (parameterized by `N` at top of setup cell), `outputs/scoring_method_L1.xlsx` (Summary + 30 per-round printable cards, chronological). **30-round read (2024-05-25 to 2026-06-26, 324 holes):** D3 rate 69%, zone-in-reg 34%, in-play 88%, bogey-ceiling 61%, blow-ups 32%. Total actual 1643 vs Robins-ceiling 1419 → **224 strokes available across the window**. Robins-lens diagnosis: full-swing get-to-100 + blow-up cascades. 5-round snapshot was noisier — 30-round window is the more reliable baseline.
 
 ## Decisions reached
 
@@ -33,8 +34,10 @@ Live worklist for the project. Mark items `[x]` when shipped.
 
 ### Bag
 - [ ] Decide whether to drop the 9-iron (recommended). One-time decision; no cost.
-- [ ] Capture measured **driver** swing speed on the GC3 (currently estimated at 84 mph from Book1)
+- [x] Capture measured **driver** swing speed on the GC3 — measured 83.9 mph avg (range 81-87 mph) on 2026-06-30; Book1 estimate of 84 mph was accurate
+- [x] Capture measured **5-iron** swing speed on the GC3 — measured 77.0 mph avg on 2026-06-30
 - [ ] Capture measured **3W, hybrid, wedge** swing speeds — top + bottom of bag are the least confident in the forecast
+- [ ] **NOTE — 2026-06-30 Driver + 5i session**: user flagged this as a bad day; data in sessions but treat as a baseline/outlier floor, not representative peak. Get a second session to triangulate.
 - [ ] Per-wedge gapping session with launch monitor — three MG4 wedges share generic `Wedge` label in shots.csv, so per-wedge p80 isn't disambiguated by Arccos data alone
 
 ### Practice priorities (in order of stroke ROI)
@@ -42,6 +45,7 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [ ] **Par-3 tee shots in 125-150 yd range** — diagnostics §1 shows tee lie loses 0.57 SG/shot, worst lie in this band. Practice 7i / 6i full swings from a mat to a target.
 - [ ] **7i / 8i strike improvement on the GC3.** Lift smash 1.31 → 1.35 to attack the 125-150 yd approach SG leak (−0.42 SG/shot, biggest single bleed at ~73 strokes over 50 rounds)
 - [ ] Consider lessons specifically targeting iron contact + spin (current 7i spin 4924 vs target 6500-7500)
+- [ ] **Test grip strength hypothesis**: 2026-06-30 session shows 5i best strikes at 2,499–3,299 rpm (target 5,500–6,500) and driver at 1,075–1,649 rpm on several shots — well below target. Strong grip closing the face is one plausible cause (reduces spin loft). Test: hit a GC3 session with a deliberately weakened grip and compare spin rates on best strikes vs this baseline.
 - [ ] Hole 1 + hole 9 at Twin Oaks (your worst at +1.58 / +1.52 to par) — pre-round visualization + clear strategy
 
 ### Upstream / tooling
@@ -52,6 +56,8 @@ Live worklist for the project. Mark items `[x]` when shipped.
 - [ ] Update `Arccos_Course_Analysis.ipynb` to use the new `paired_bag` + `shots_in_bag()` filters so the notebook automatically excludes retired-club shots
 - [ ] Track per-round SG totals in a weekly rolling chart once `>5` rounds played in 2026
 - [ ] Course-specific analysis once enough rounds played per course (Twin Oaks GC dominates the dataset)
+- [ ] **Scoring Method Level 2/3/4** — extend `arccos/scoring_method.py` with L2 (inside 50 yd, down-in-2), L3 (inside 25 yd, up-and-down conversion), L4 (GIR + first-putt proximity + 3-putt avoidance). Same shape as L1: per-hole metrics -> per-round scorecards -> aggregate + practice priorities.
+- [ ] After a few more rounds, rerun L1 with N=10 to see whether the "get-to-zone 31%" number holds (small-sample: 49 holes across 5 partial rounds)
 
 ## Maybe later
 
