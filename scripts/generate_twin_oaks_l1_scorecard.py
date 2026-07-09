@@ -327,9 +327,229 @@ def build_scorecard():
     ws[f"O{row}"].value = "thescoringmethod.com | Will Robins Level 1"
     ws[f"O{row}"].font = Font(size=8, italic=True, color="707070")
     ws[f"O{row}"].alignment = left(wrap=False)
+    row += 1
+
+    # ── AFTER-ROUND RESULTS block ────────────────────────────────────────────
+    row = build_results_section(ws, row)
 
     wb.save(OUTPUT)
     print(f"Saved: {OUTPUT}")
+
+
+# ── Results section builders ─────────────────────────────────────────────────
+GEAR_ROWS = [
+    ("G4", "Aggressive — attack Level 4 target (fire at the green, high-risk shot)"),
+    ("G3", "Attack Level 3 (inside 25 yd) — normal committed execution"),
+    ("G2", "Attack Level 2 (inside 50 yd) — controlled shot into scoring zone"),
+    ("G1", "Safe — reach Level 1 (inside 100-yd matrix); protect against trouble"),
+    ("G0", "Recovery — punch out / drop / minimum motion, get back to matrix"),
+]
+
+LEVEL_ROWS = [
+    ("L1 ✓", "Inside 100 yd in regulation"),
+    ("L2 ✓", "Inside 50 yd in regulation"),
+    ("L3 ✓", "Inside 25 yd in regulation"),
+    ("L4 ✓", "On the green in regulation (GIR)"),
+]
+
+METRIC_ROW_1 = [
+    ("In-Play %",    "___ / 9",  "No penalty strokes on hole"),
+    ("Zone-in-Reg %","___ / 9",  "Reached 100-yd zone in par target"),
+    ("D3 Rate",      "___ / 9",  "Strokes in zone ≤ 3 (headline L1 stat)"),
+    ("Bogey Ceil %", "___ / 9",  "In-play + zone in reg + D3"),
+]
+
+METRIC_ROW_2 = [
+    ("Score vs Ceil",       "____ vs ____  (Δ ____)", "Actual total vs 'held bogey ceiling every hole'"),
+    ("Nemesis (H1,3,9)",    "+ ____ over",             "Combined score-to-par on the red holes"),
+    ("Opportunity (H5)",    "+ ____ over",             "Score-to-par on the green scoring hole"),
+    ("Blow-ups (dbl+)",     "____ / 9",                "Holes with score-to-par ≥ 2"),
+]
+
+
+def build_results_section(ws, start_row: int) -> int:
+    """Append the after-round Results block. Returns next available row."""
+    row = start_row
+
+    # ── Results banner ───────────────────────────────────────────────────────
+    ws.row_dimensions[row].height = 18
+    ws.merge_cells(f"A{row}:O{row}")
+    c = ws[f"A{row}"]
+    c.value = "AFTER-ROUND RESULTS   —   fill in totals from the tracking columns above"
+    c.font = font(bold=True, size=11, color=WHITE)
+    c.fill = fill(GREEN_DARK)
+    c.alignment = center()
+    row += 1
+
+    # ── Sub-header: GEAR (left half) + LEVEL (right half) ────────────────────
+    ws.row_dimensions[row].height = 15
+    ws.merge_cells(f"A{row}:G{row}")
+    c = ws[f"A{row}"]
+    c.value = "GEAR RESULTS — dynamic, shot-by-shot risk management (count shots)"
+    c.font = Font(size=9, bold=True, color=WHITE)
+    c.fill = fill("1A5276")
+    c.alignment = center()
+
+    ws.merge_cells(f"H{row}:N{row}")
+    c = ws[f"H{row}"]
+    c.value = "LEVEL RESULTS — fixed baseline target per hole (count holes achieved)"
+    c.font = Font(size=9, bold=True, color=WHITE)
+    c.fill = fill("1A5276")
+    c.alignment = center()
+
+    ws[f"O{row}"].value = "NOTES / TAKEAWAYS"
+    ws[f"O{row}"].font = Font(size=9, bold=True, color=WHITE)
+    ws[f"O{row}"].fill = fill("1A5276")
+    ws[f"O{row}"].alignment = center()
+    row += 1
+
+    # ── Rows 1-5: Gear on left (all 5 rows), Level on right (rows 1-4), NOTES col O merged
+    notes_top = row
+    for i, (gear, gear_def) in enumerate(GEAR_ROWS):
+        ws.row_dimensions[row].height = 20
+
+        # Gear block — A: label, B: count (blank), C:G: definition
+        gc = ws[f"A{row}"]
+        gc.value = gear
+        gc.font = font(bold=True, size=11)
+        gc.fill = fill(GREY_LIGHT)
+        gc.alignment = center()
+        gc.border = thin_border()
+
+        gcount = ws[f"B{row}"]
+        gcount.fill = fill(WHITE)
+        gcount.alignment = center()
+        gcount.border = thin_border()
+
+        ws.merge_cells(f"C{row}:G{row}")
+        gdef = ws[f"C{row}"]
+        gdef.value = gear_def
+        gdef.font = font(size=8.5)
+        gdef.fill = fill(GREY_LIGHT)
+        gdef.alignment = left(wrap=True)
+        gdef.border = thin_border()
+
+        # Level block — only 4 rows; leave row 5 blank/greyed
+        if i < len(LEVEL_ROWS):
+            level, level_def = LEVEL_ROWS[i]
+
+            lc = ws[f"H{row}"]
+            lc.value = level
+            lc.font = font(bold=True, size=11)
+            lc.fill = fill(GREY_LIGHT)
+            lc.alignment = center()
+            lc.border = thin_border()
+
+            lcount = ws[f"I{row}"]
+            lcount.value = "___ / 9"
+            lcount.font = font(size=9)
+            lcount.fill = fill(WHITE)
+            lcount.alignment = center()
+            lcount.border = thin_border()
+
+            ws.merge_cells(f"J{row}:N{row}")
+            ldef = ws[f"J{row}"]
+            ldef.value = level_def
+            ldef.font = font(size=9)
+            ldef.fill = fill(GREY_LIGHT)
+            ldef.alignment = left(wrap=True)
+            ldef.border = thin_border()
+        else:
+            # Empty row on the level side — soft grey filler
+            ws.merge_cells(f"H{row}:N{row}")
+            filler = ws[f"H{row}"]
+            filler.value = "Levels ladder up: hit L4 = GIR = birdie look; L1 = bogey ceiling."
+            filler.font = Font(size=8, italic=True, color="707070")
+            filler.fill = fill(GREY_LIGHT)
+            filler.alignment = center()
+            filler.border = thin_border()
+
+        row += 1
+
+    # Merge NOTES column O across all 5 gear rows
+    ws.merge_cells(f"O{notes_top}:O{notes_top + len(GEAR_ROWS) - 1}")
+    notes_cell = ws[f"O{notes_top}"]
+    notes_cell.fill = fill(WHITE)
+    notes_cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    notes_cell.border = thin_border()
+
+    # ── Round Metrics header ─────────────────────────────────────────────────
+    ws.row_dimensions[row].height = 15
+    ws.merge_cells(f"A{row}:O{row}")
+    c = ws[f"A{row}"]
+    c.value = "ROUND METRICS — compute from the tracking columns above"
+    c.font = Font(size=9, bold=True, color=WHITE)
+    c.fill = fill("1A5276")
+    c.alignment = center()
+    row += 1
+
+    # ── Metric row 1 (4 metrics across 15 cols) ──────────────────────────────
+    row = _write_metric_row(ws, row, METRIC_ROW_1)
+
+    # ── Metric row 2 (4 metrics across 15 cols) ──────────────────────────────
+    row = _write_metric_row(ws, row, METRIC_ROW_2)
+
+    return row
+
+
+def _write_metric_row(ws, row: int, metrics: list) -> int:
+    """Write a row of 4 metrics; each metric takes label/value/definition cells.
+
+    Layout across 15 cols (A-O), split into 4 equal-ish blocks:
+      Block 1: A-D   (label A:B, value C:D)
+      Block 2: E-H   (label E:F, value G:H)
+      Block 3: I-K   (label I, value J:K)
+      Block 4: L-O   (label L:M, value N:O)
+    Definition text goes into a second wrapped row underneath (small italic).
+    """
+    ws.row_dimensions[row].height = 26
+
+    blocks = [
+        ("A", "B", "C", "D"),   # Block 1
+        ("E", "F", "G", "H"),   # Block 2
+        ("I", "I", "J", "K"),   # Block 3 (label single col)
+        ("L", "M", "N", "O"),   # Block 4
+    ]
+
+    for (metric, (label_l, label_r, val_l, val_r)) in zip(metrics, blocks):
+        name, value, definition = metric
+
+        # Label cell (merged)
+        if label_l != label_r:
+            ws.merge_cells(f"{label_l}{row}:{label_r}{row}")
+        lc = ws[f"{label_l}{row}"]
+        lc.value = name
+        lc.font = font(bold=True, size=9)
+        lc.fill = fill(GREY_MID)
+        lc.alignment = center()
+        lc.border = thin_border()
+
+        # Value cell (merged)
+        if val_l != val_r:
+            ws.merge_cells(f"{val_l}{row}:{val_r}{row}")
+        vc = ws[f"{val_l}{row}"]
+        vc.value = value
+        vc.font = font(size=9)
+        vc.fill = fill(WHITE)
+        vc.alignment = center()
+        vc.border = thin_border()
+
+    row += 1
+
+    # Definition sub-row (small italic) — spans same block layout
+    ws.row_dimensions[row].height = 16
+    for (metric, (label_l, _label_r, _val_l, val_r)) in zip(metrics, blocks):
+        _name, _value, definition = metric
+        ws.merge_cells(f"{label_l}{row}:{val_r}{row}")
+        dc = ws[f"{label_l}{row}"]
+        dc.value = definition
+        dc.font = Font(size=7.5, italic=True, color="505050")
+        dc.fill = fill(GREY_LIGHT)
+        dc.alignment = center(wrap=True)
+        dc.border = thin_border()
+
+    row += 1
+    return row
 
 
 if __name__ == "__main__":
