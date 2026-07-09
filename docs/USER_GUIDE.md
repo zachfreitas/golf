@@ -753,6 +753,16 @@ setup cell) controls the lookback window. Sections:
 1. **Round selection** — the N most recent rounds by date.
 2. **Per-hole metrics** — the raw substrate for everything downstream.
 3. **Aggregate dashboard** — headline metrics + par-3/4/5 breakdown.
+3b. **Level ladder (L1-L4)** — per-hole achievement of each Robins level in
+   regulation (≤ par-2 strokes). L1 = inside 100 yd, L2 = inside 50, L3 =
+   inside 25, L4 = GIR (green). Nested: L4 ⊂ L3 ⊂ L2 ⊂ L1. Table + bar
+   chart. The gap between L1 and L4 shows full-swing precision headroom.
+3c. **Inferred Gear tally** — heuristic G4-G0 shot bucketing by
+   `start_dist_to_pin_yd` (G4 = >180 yd, G3 = 100-180, G2 = 30-100, G1 =
+   ≤30 non-putt, G0 = not inferrable from distance). This is a proxy for
+   shot INTENT, not a measurement of it — Arccos doesn't record intent.
+   True gear grading requires the printed scorecard where you tag each
+   shot in the moment.
 4. **Practice priorities** — heuristic Robins-lens read from
    `derive_practice_priorities()`. Rules of thumb:
    - `in_play_pct` < 85% → tee-shot decision problem
@@ -763,7 +773,9 @@ setup cell) controls the lookback window. Sections:
    counterfactual, per round, with bar chart. "Strokes available if you had
    executed L1 on every hole."
 6. **Per-round scorecards** — every round in the window, oldest first.
-7. **Trend chart** — all four L1 metrics plotted against time.
+7. **Trend chart** — all four L1 metrics plotted against time, with
+   dashed linear trend lines overlaid per series. Legend annotates total
+   change in percentage points across the window (positive = improving).
 8. **Excel export** — writes `outputs/scoring_method_L1.xlsx` as a byproduct
    of running the notebook.
 
@@ -833,13 +845,17 @@ Or open the notebook in Jupyter and Run All. To change the lookback window,
 edit `LOOKBACK_N` at the top of `C:/tmp/build_l1_notebook.py` (or edit the
 `N =` line in the notebook's setup cell and re-run).
 
-### Next levels (not yet implemented)
+### Next levels — now implemented as the Level ladder
 
-The Robins methodology also defines Levels 2-4:
-- **Level 2** — inside 50 yd, down-in-two goal
-- **Level 3** — inside 25 yd, up-and-down conversion
-- **Level 4** — on the green, first-putt proximity + three-putt avoidance
+L1-L4 achievement (reached inside 100/50/25/green in par-2 strokes) is now
+computed in `compute_level_ladder()` and reported in §3b of the notebook.
+The ladder answers "how far up the proximity ladder am I climbing on each
+hole." Still open for future work:
 
-Extending `arccos/scoring_method.py` with L2/L3/L4 functions would follow
-the same shape — different `ZONE_YARDS` constant, different `DOWN_IN_TARGET`,
-different `ZONE_REG_TARGET` map. Tracked in `tasks/todo.md`.
+- **Full L2 down-in-two conversion** — currently we track "reached L2 in
+  reg"; adding a down-in-2-from-L2 rate would parallel D3-from-L1.
+- **L3 up-and-down conversion** — chip proximity + first-putt conversion
+  from ≤25 yd. Requires a per-hole "was chip → 1-putt for par" flag.
+- **L4 first-putt proximity + 3-putt avoidance** — putting-specific
+  granularity that the existing `arccos/diagnostics.putt_stats()`
+  partially covers.

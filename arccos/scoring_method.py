@@ -28,6 +28,38 @@ ZONE_REG_TARGET = {3: 1, 4: 1, 5: 2}
 # strokes_to_zone ceiling for "bogey ceiling met" (Robins' promise)
 ZONE_BOGEY_CEILING = {3: 1, 4: 2, 5: 3}
 
+# ── Level ladder (Robins L1-L4) ─────────────────────────────────────────────
+# Level = fixed distance-to-pin baseline reached in "GIR-style" par-2 strokes.
+# All four levels use the SAME reg-target (par-2), so achievement nests:
+# L4 ⊂ L3 ⊂ L2 ⊂ L1 (a hole where you hit GIR also cleared inside-100).
+LEVEL_YARDS   = {1: 100, 2: 50, 3: 25}  # L4 handled specially (GIR via putts)
+LEVEL_REG_TARGET = {3: 1, 4: 2, 5: 3}   # par - 2
+
+# ── Gear inference (heuristic proxy for shot intent) ────────────────────────
+# True Robins gears are the shot-by-shot INTENT chosen before the swing —
+# Arccos does not record intent. This heuristic buckets non-putt shots by
+# start-distance-to-pin as a directional proxy. Putts are tallied separately.
+def infer_gear(start_dist_yd: float) -> str:
+    """Bucket a non-putt shot into G1-G4 by start distance to pin.
+
+    G4  full-swing long shot (driver / 3W / long approach)
+    G3  mid-iron / hybrid approach (attack L3 target)
+    G2  wedge scoring shot (attack L2 target)
+    G1  chip / pitch (attack L1 matrix / safe position)
+
+    G0 (recovery / punch-out) is not inferrable from distance alone and is
+    reported as a separate 'penalty-hole recovery' proxy in aggregate.
+    """
+    if start_dist_yd is None or pd.isna(start_dist_yd):
+        return "G?"
+    if start_dist_yd > 180:
+        return "G4"
+    if start_dist_yd > 100:
+        return "G3"
+    if start_dist_yd > 30:
+        return "G2"
+    return "G1"
+
 
 def select_last_n_rounds(rounds: pd.DataFrame, n: int = 5) -> pd.DataFrame:
     """Return the n most recent rounds by date, newest first."""
@@ -255,3 +287,124 @@ def derive_practice_priorities(agg: SummaryStats) -> list[str]:
             "Time to graduate to Level 2 (inside 50 yd) analysis."
         )
     return notes
+
+
+# ── Level ladder ────────────────────────────────────────────────────────────
+def compute_level_ladder(
+    shots: pd.DataFrame,
+    holes: pd.DataFrame,
+    round_ids: list[int],
+) -> pd.DataFrame:
+    """Per-hole achievement of Robins Levels 1-4.
+
+    L1/L2/L3 = ball first ended inside 100/50/25 yd on shot ≤ par-2.
+    L4 (GIR) = non-putt shot count ≤ par-2 AND at least one putt taken
+              (proxy: ball reached green by regulation stroke).
+
+    Returns columns:
+      round_id, hole_id, date, course, par,
+      l1_reg, l2_reg, l3_reg, l4_reg   (0/1 flags)
+    """
+    h = holes[holes["round_id"].isin(round_ids)].copy()
+    s = shots[shots["round_id"].isin(round_ids)].copy()
+
+    non_putt = s[~s["is_putt"].astype(bool)].copy()
+    non_putt["shot_num"] = (
+        non_putt.sort_values(["round_id", "hole_id"])
+                .groupby(["round_id", "hole_id"]).cumcount() + 1
+    )
+
+    # For each level 1/2/3: first shot where end_dist <= level yd threshold.
+    first_reach = {}
+    for lvl, yd in LEVEL_YARDS.items():
+        reached = (non_putt[non_putt["end_dist_to_pin_yd"] <= yd]
+                    .groupby(["round_id", "hole_id"])["shot_num"]
+                    .min()
+                    .rename(f"first_shot_l{lvl}"))
+        first_reach[lvl] = reached
+
+    # L4 = GIR proxy: (non_putt count <= par-2) AND (>=1 putt)
+    np_count = (non_putt.groupby(["round_id", "hole_id"])
+                        .size().rename("np_count"))
+    putt_count = (s[s["is_putt"].astype(bool)]
+                    .groupby(["round_id", "hole_id"])
+                    .size().rename("putt_count"))
+
+    m = h.merge(first_reach[1], on=["round_id", "hole_id"], how="left")
+    m = m.merge(first_reach[2], on=["round_id", "hole_id"], how="left")
+    m = m.merge(first_reach[3], on=["round_id", "hole_id"], how="left")
+    m = m.merge(np_count, on=["round_id", "hole_id"], how="left")
+    m = m.merge(putt_count, on=["round_id", "hole_id"], how="left")
+
+    m["np_count"] = m["np_count"].fillna(0).astype(int)
+    m["putt_count"] = m["putt_count"].fillna(0).astype(int)
+    m["reg_target"] = m["par"].map(LEVEL_REG_TARGET)
+
+    def flag(col, target):
+        return ((m[col].notna()) & (m[col] <= target)).astype(int)
+
+    m["l1_reg"] = flag("first_shot_l1", m["reg_target"])
+    m["l2_reg"] = flag("first_shot_l2", m["reg_target"])
+    m["l3_reg"] = flag("first_shot_l3", m["reg_target"])
+    m["l4_reg"] = ((m["np_count"] <= m["reg_target"])
+                   & (m["putt_count"] >= 1)).astype(int)
+
+    return m[[
+        "round_id", "hole_id", "date", "course", "par",
+        "l1_reg", "l2_reg", "l3_reg", "l4_reg",
+    ]].sort_values(["date", "round_id", "hole_id"]).reset_index(drop=True)
+
+
+def summarise_level_ladder(ladder: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate ladder to counts + percentages per level."""
+    total_holes = len(ladder)
+    rows = []
+    for lvl, label in [(1, "L1 (inside 100 yd in reg)"),
+                       (2, "L2 (inside 50 yd in reg)"),
+                       (3, "L3 (inside 25 yd in reg)"),
+                       (4, "L4 / GIR (on green in reg)")]:
+        col = f"l{lvl}_reg"
+        n = int(ladder[col].sum())
+        rows.append({
+            "Level": f"L{lvl}",
+            "Definition": label,
+            "Holes achieved": f"{n} / {total_holes}",
+            "Rate": f"{n / total_holes:.0%}" if total_holes else "n/a",
+        })
+    return pd.DataFrame(rows)
+
+
+# ── Gear tally (inferred) ───────────────────────────────────────────────────
+def compute_gear_tally(
+    shots: pd.DataFrame,
+    round_ids: list[int],
+) -> pd.DataFrame:
+    """Inferred Gear tally G1-G4 for non-putt shots + separate putt count.
+
+    Heuristic: bucket by start_dist_to_pin_yd (see infer_gear docstring).
+    NOT a measure of intent — it's a distance-band proxy. A punch-out from
+    150 yd will be tagged G3 even though the intent was G0 recovery.
+    """
+    s = shots[shots["round_id"].isin(round_ids)].copy()
+    non_putt = s[~s["is_putt"].astype(bool)].copy()
+    non_putt["gear"] = non_putt["start_dist_to_pin_yd"].apply(infer_gear)
+
+    counts = non_putt["gear"].value_counts().reindex(
+        ["G4", "G3", "G2", "G1", "G?"], fill_value=0
+    )
+    putt_n = int(s["is_putt"].astype(bool).sum())
+
+    rows = [
+        ("G4", "Long full swing / driver / 3W  (start >180 yd)",       int(counts["G4"])),
+        ("G3", "Mid iron / hybrid approach     (100-180 yd)",          int(counts["G3"])),
+        ("G2", "Wedge / scoring full swing     (30-100 yd)",           int(counts["G2"])),
+        ("G1", "Chip / pitch / short shot      (≤30 yd, non-putt)",    int(counts["G1"])),
+        ("G0", "Recovery / punch-out           (not inferrable — 0)",  0),
+        ("Putt", "On-green stroke              (separate category)",   putt_n),
+    ]
+    df = pd.DataFrame(rows, columns=["Gear", "Definition (inferred by start distance)", "Shots"])
+    total_shots = df["Shots"].sum()
+    df["Rate"] = df["Shots"].apply(
+        lambda n: f"{n / total_shots:.0%}" if total_shots else "n/a"
+    )
+    return df
