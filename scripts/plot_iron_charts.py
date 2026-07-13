@@ -187,8 +187,84 @@ def spin_vs_moi():
         "MOI (Maltby)  ->  more forgiving","3_spin_vs_moi.png",need_moi=True)
 
 
+# ---------- pooled multi-source robot charts (2b, 3b) ----------
+SRC_MK={"GD":"o","CC":"^","MGS":"s"}   # marker shape per source
+SRC_NAME={"GD":"Golf Digest (82mph)","CC":"Cool Clubs (80mph steel)","MGS":"MyGolfSpy"}
+
+
+def _combined_robot():
+    """Union of measured spin/descent from all three robot sources (67 models).
+    Conditions differ by source (see SRC_NAME) -> compare within a source; the pooled
+    view is for coverage. MOI is joined from Maltby specs (source-independent)."""
+    gd=pd.read_csv(D/"golfdigest_robot_2026.csv").rename(columns={})
+    gd=gd[["brand","model","spin_rpm","descent_deg","category"]].assign(src="GD")
+    mgs=pd.read_csv(D/"mygolfspy_robot.csv").rename(columns={"oem":"brand","spin":"spin_rpm","descent":"descent_deg"})
+    mgs=mgs[["brand","model","spin_rpm","descent_deg","category"]].assign(src="MGS")
+    cc=pd.read_csv(D/"coolclubs_iron_data.csv")[["brand","model","spin_rpm","descent_deg"]].assign(src="CC",category="")
+    df=pd.concat([gd,mgs,cc],ignore_index=True)
+    for c in ("spin_rpm","descent_deg"): df[c]=pd.to_numeric(df[c],errors="coerce")
+    df=df.dropna(subset=["spin_rpm"]).copy()
+    # fill missing category (Cool Clubs) from any same-name row that has one
+    catmap={}
+    for _,r in df.iterrows():
+        if r.category: catmap.setdefault(na(r.brand)+na(r.model)[:6], r.category)
+    df["category"]=[c if c else catmap.get(na(b)+na(m)[:6],"") for b,m,c in zip(df.brand,df.model,df.category)]
+    # MOI from Maltby specs
+    s=pd.read_csv(D/"maltby_mpf_brand_specs.csv"); s["moi"]=pd.to_numeric(s.moi,errors="coerce"); s["year"]=pd.to_numeric(s.year,errors="coerce")
+    def moi_for(b,m):
+        sub=s[(s.brand.map(na)==na(b))&(s.year>=2023)]
+        for _,r in sub.iterrows():
+            if na(m)[:5] and (na(m)[:5] in na(r.model) or na(r.model)[:5] in na(m)): return r.moi
+        return None
+    df["moi"]=[moi_for(b,m) for b,m in zip(df.brand,df.model)]
+    return df
+
+
+def _pooled(ycol,y_thr,title,sub,ylab,fname,need_moi=False):
+    df=_combined_robot()
+    if need_moi: df=df.dropna(subset=["moi"]); ycol="moi"
+    else: df=df.dropna(subset=[ycol])
+    inzone=df[(df.spin_rpm>=5500)&(df[ycol]>=y_thr)]
+    out=df.drop(inzone.index)
+    fig,ax=plt.subplots(figsize=(12,8.5))
+    for src,mk in SRC_MK.items():
+        o=out[out.src==src]
+        ax.scatter(o.spin_rpm,o[ycol],s=44,marker=mk,c="#d9d8d2",alpha=0.75,edgecolor="none",zorder=1)
+    rows=sorted([r for _,r in inzone.iterrows()],key=lambda r:(r.spin_rpm,r[ycol]))
+    for i,r in enumerate(rows):
+        col=CAT.get(r.category,MUTED)
+        ax.scatter(r.spin_rpm,r[ycol],s=85,marker=SRC_MK.get(r.src,"o"),c=col,edgecolor="white",lw=1.1,zorder=3)
+        dy=10 if i%2==0 else -14
+        ax.annotate(f"{str(r['brand']).title()} {clean(r['model'])}",(r.spin_rpm,r[ycol]),
+                    textcoords="offset points",xytext=(0,dy),ha="center",fontsize=7.2,
+                    color=col,fontweight="bold",zorder=6)
+    mark_you(ax,4949,(39.5 if ycol=="descent_deg" else 11.54),"YOU: P770 (GC3, 75mph)",YOU,300,"D",-16)
+    zone_rect(ax,5500,"high",y_thr,"high")
+    style(ax,title,sub,"Backspin (rpm, robot 7-iron)  ->  more spin",ylab)
+    leg=[Line2D([0],[0],marker=mk,color="w",markerfacecolor=MUTED,markersize=9,label=SRC_NAME[s]) for s,mk in SRC_MK.items()]
+    leg.append(Line2D([0],[0],marker="D",color="w",markerfacecolor=YOU,markersize=10,label="Your P770 (GC3)"))
+    ax.legend(handles=leg,loc="lower right",frameon=False,fontsize=8.5,title="Source (shape)")
+    fig.tight_layout(); fig.savefig(OUT/fname,dpi=150); plt.close(fig)
+    print(f"wrote outputs/charts/{fname}  ({len(inzone)} in-zone / {len(df)} measured points)")
+
+
+def pooled_spin_descent():
+    _pooled("descent_deg",45.0,
+        "Green-holding (ALL 3 robot sources pooled) — spin vs descent",
+        "67 measured models. Shape = source; conditions differ (GD 82mph / CC 80mph steel / MGS varies) so compare within a source. Green zone: spin>=5,500 & descent>=45.",
+        "Descent angle (deg)  ->  steeper / holds greens","2b_spin_descent_pooled.png")
+
+
+def pooled_spin_moi():
+    _pooled("moi",14.0,
+        "Spin vs MOI (ALL 3 robot sources pooled)",
+        "Spin measured (shape=source; conditions differ), MOI from Maltby. Green zone: spin>=5,500 & MOI>=14.",
+        "MOI (Maltby)  ->  more forgiving","3b_spin_moi_pooled.png",need_moi=True)
+
+
 if __name__ == "__main__":
     ap=argparse.ArgumentParser(); ap.add_argument("--since",type=int,default=YEAR_MIN)
     YEAR_MIN=ap.parse_args().since
     print(f"CG charts: year >= {YEAR_MIN}")
     cg_map(); actual_vcog_vs_moi(); eff_vcog_vs_moi(); green_holding(); spin_vs_moi()
+    pooled_spin_descent(); pooled_spin_moi()
