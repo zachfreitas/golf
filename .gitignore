@@ -33,6 +33,9 @@ venv/
 .venv/
 env/
 
+# Playwright MCP transient artifacts (snapshots, screenshots, console logs)
+.playwright-mcp/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
@@ -44,6 +47,15 @@ desktop.ini
 ~$*.xlsx
 ~$*.docx
 ~$*.pptx
+
+# Cached source PDFs (large; re-downloadable via pipeline, hashes tracked in manifest)
+data/irons_research/*.pdf
+data/irons_research/brand_pdfs/
+# Raw scraping artifacts (large screenshots/article text); small mgs_*.json kept for repeatability
+data/irons_research/raw/*.png
+data/irons_research/raw/*.txt
+# Cool Clubs images (re-downloadable via fetch_coolclubs_iron_data.py; values captured in coolclubs_iron_data.csv)
+data/irons_research/coolclubs/png/
 
 # Local secrets / scratch
 scratch/

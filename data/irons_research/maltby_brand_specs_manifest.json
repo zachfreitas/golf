@@ -1,0 +1,315 @@
+{
+  "validators": {
+    "1IRONGOLF": {
+      "sha256": "414dc6a52fc175f3d9b8b595458c1efbdc0a4048788a25a946ab1c689c94e4d7",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:05 +0000"
+    },
+    "ADAMS GOLF": {
+      "sha256": "577f124431e783ba180323e09d365efcfb4254a0e8125eab183e16dda66bee32",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:05 +0000"
+    },
+    "BEN HOGAN": {
+      "sha256": "84ab5c4383b2d878ef217cea595a11bc24bc52c57fa3d130b849877e9747f79f",
+      "etag": null,
+      "last_modified": "Wed, 30 Jul 2025 15:28:56 GMT"
+    },
+    "BOCCIERI GOLF": {
+      "sha256": "9a5ff6836701887e99c03ad441b10e9efbcb036fcbf4d4cc0e49d8622fde96a5",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:05 +0000"
+    },
+    "BRIDGESTONE GOLF": {
+      "sha256": "4d0ab15e06600a48c1d6f60682f775d28639f1adb45092c82d8f70e96e2ebb6c",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:05 +0000"
+    },
+    "BROWNING": {
+      "sha256": "012f675af4e65e86aaca766d65eb3ea7d856017d706443fbee7826fde87bea0c",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:06 +0000"
+    },
+    "BURKE": {
+      "sha256": "e3564754a0702230b7f66028ed7924601df0ec478e81471ec8abb0333d9c74f5",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:06 +0000"
+    },
+    "CALLAWAY": {
+      "sha256": "d91434e12d87c178666822386d250e30a93056ecb9c0564ea85cf6c4307d5c1e",
+      "etag": null,
+      "last_modified": "Tue, 09 Jun 2026 19:24:30 +0000"
+    },
+    "CLEVELAND": {
+      "sha256": "f3bb3045ae7665150aa69779825a22ead780462d8c263c78d0e60ee7f93c7978",
+      "etag": null,
+      "last_modified": "Fri, 23 May 2025 20:43:12 GMT"
+    },
+    "COBRA": {
+      "sha256": "ad754b1d4cc960fb6b858e057803993732fe1bfe1ce2259d72ab8084fc63cd7e",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:02 +0000"
+    },
+    "DYNACRAFT": {
+      "sha256": "eeaf4dbcc2dee47d44fc24012ab5d80f7a81a66c959b6e654c066d88831f37a7",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:06 +0000"
+    },
+    "FOUNDERS CLUB": {
+      "sha256": "3b2462557970cbfe99e4cee4c3eece4fc91cf1016a6758684c11cf59af468587",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:00 +0000"
+    },
+    "GOLDWIN": {
+      "sha256": "5729a772c9d1b04618443b7da1ad05155377d83a45d293dfc6cd2026015329d8",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:00 +0000"
+    },
+    "GOLFSMITH": {
+      "sha256": "2487e0fad55dfba81ffd27672473bdeabad09bf48f5b39378f01a8674cd07529",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "GOLFWORKS": {
+      "sha256": "451d907fa09ccccd6a0f80056fa99ad337b6082ae3b4c42a5a9955df84022eb7",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:00 +0000"
+    },
+    "GRIFFITTS HENRY": {
+      "sha256": "bff278b702750993b7221887bf58ec9f1c85d8003cc520163e22db94797137ba",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:00 +0000"
+    },
+    "KZG": {
+      "sha256": "521566d3a35ee4cf4f79781ff4ab6c929552a45a7f8850f9558c9fe7da3dda9f",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "LIQUIDMETAL": {
+      "sha256": "0eb401e9e1a19d2595d3b3b0e736337d36e53f8636b3d050a3f0a44a4c3de239",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "LOPEZ": {
+      "sha256": "6c3a4611b9b560e0c5ad9c9363dc352f9a7796e5fe6c2d2dda49db5f97ef906b",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "LYNX": {
+      "sha256": "5b9b13b9bf4e1f2e28ba76c0e0c0936ec24c9ecd4e6bd16db27d67ac711f8468",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "MACGREGOR": {
+      "sha256": "05e7982133326a83ade1e7d6a8f1b0773cacaa57b640d68f5e33851a4fae9769",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "MAKSER": {
+      "sha256": "d7c39f54d03a929f21c59ca2190a34b037cfe655534980d0790d1c40d26425bf",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "MALTBY": {
+      "sha256": "d87d9205237c8d2228bc4c31b3f8858a93889e528343380ac8be5d7a0e36fcbb",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:02 +0000"
+    },
+    "MAXFLI": {
+      "sha256": "5284e309c67a71c621d3edb13e1fea6557f46b0b9c0251f44ba4c132d782a0d4",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:02 GMT"
+    },
+    "MISC": {
+      "sha256": "850efb200be8986bd971307a94e4f38774f0032da94feb95b574028a0ece7c23",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "MIURA": {
+      "sha256": "b5d76ce17433735f7c3572d7045fd0e970269c48882f2f552aee1dcf5277c3bd",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:01 +0000"
+    },
+    "MIZUNO": {
+      "sha256": "8a4d6690085d6ee01a56ec0624c4ed6d75c43b4a63140a7f5b25b4c892b8e6b8",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:03 GMT"
+    },
+    "NAKASHIMA": {
+      "sha256": "f5b0e3423c7223b56960dfc1546c527fa452f4573e224c0603ad39c4d5255969",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "NICKENT": {
+      "sha256": "b8f69f44d2897ddffb7cebbb90f3982dc2011d158719c9c1c77b962cc93ec074",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "NICKLAUS": {
+      "sha256": "2a8aea26f703b300f49818b8bc71aa2b67dc2285285111bc60dadb3c541f1efd",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "NIKE": {
+      "sha256": "c6c11d3c027852be8eed15c785c0653eb2d1fa6816b9af3db989688a48ec64c4",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:03 GMT"
+    },
+    "ORLIMAR": {
+      "sha256": "8571b7f36fbf3763c00a238e496e22ee00006273b23601ba6773c952c0f8f17f",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "PEERLESS": {
+      "sha256": "9b772cf83bf941ed480863ed881c68916b3a02aade6f0afdae010ddfbf011b81",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:02 +0000"
+    },
+    "PING": {
+      "sha256": "89c6b319aa2f5d63f093577550a09ba2048b707ebba950c85b8a65c0e5549105",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:02 +0000"
+    },
+    "POWERBILT": {
+      "sha256": "8bfc70a8816b3b3297de88462945efe3d4e77d1c3d27103d63d76257a0f00de4",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:03 +0000"
+    },
+    "PRECEPT": {
+      "sha256": "4d86202f5ea0f372abef68f20439c048f01c231ad256f0be4c18ed7c6196579e",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:03 +0000"
+    },
+    "PXG": {
+      "sha256": "944c7fb45caed6d4e774a09059fa3958a8f61a9ab8bdc6f32d79b7259e0bca0e",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:03 +0000"
+    },
+    "RAM": {
+      "sha256": "bb8bdc7ac637b84676c7da3a44814f9ff71cc9a8094966a402876889f6986161",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:03 +0000"
+    },
+    "SPALDING": {
+      "sha256": "e39b3761b1713ff56aa5e608a8f612de712158595b81a22a29d0b980df289b60",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:03 +0000"
+    },
+    "SRIXON": {
+      "sha256": "6e4ce7d1b345a1f439fa18aceac3b6bbea0c7089aa34b8fa4fa03e38cd52988a",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:02 +0000"
+    },
+    "TAKOMO": {
+      "sha256": "5c2cc6b9e349171133ead1c5e889bcc05c88c5262d953ea80acffd26070da57f",
+      "etag": null,
+      "last_modified": "Wed, 27 Mar 2024 20:39:43 +0000"
+    },
+    "TAYLORMADE": {
+      "sha256": "72210a77ca283b98e2fa110cbe2dd165e24ea84b2d1f0141d48099a28c74e930",
+      "etag": null,
+      "last_modified": "Tue, 05 May 2026 18:39:03 GMT"
+    },
+    "TITLEIST": {
+      "sha256": "fc72753b150e04fa6487b36343609f8bafd210d419c069035ca11047f1c40827",
+      "etag": null,
+      "last_modified": "Wed, 30 Jul 2025 16:10:11 GMT"
+    },
+    "TOMMYARMOUR": {
+      "sha256": "ce3340968bff6176b795fe67f6d7bc68b585abac8badc2c7b2782ba8b3ca7647",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "TOSKI": {
+      "sha256": "e99d9891b714cb3fc9e3d42057acea3f15526f97419d6fcd5bd6d8c51f1132f7",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "TOUR EDGE": {
+      "sha256": "e731e8b3837c6f65c101d2120e3cab71e326b8a7db8c2d9ea2139a5909810002",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "TURNER": {
+      "sha256": "4ce21fcc47cc3fbc0786f31c88b1f5ad281835b123753eb6fafd43663210d952",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "WILSON": {
+      "sha256": "a9dfe929b6b9f771170a9f0a0500ffb078f6666d2215288f238812b55ca7ed38",
+      "etag": null,
+      "last_modified": "Mon, 24 Apr 2023 14:52:01 GMT"
+    },
+    "WISHON": {
+      "sha256": "8e36b29f8425693d1c35c603534e61eb8faa65b4b28d1cf19d629dc6dfd92cac",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "XXIO": {
+      "sha256": "669cfad987d3f8204e68cb334584738918f30f8a1ba4466311d06af2238689c5",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    },
+    "YONEX": {
+      "sha256": "162a3519a9d5e2f07c3c6b70af99c61203c26776ac095aa91b83fdf5f47a6b56",
+      "etag": null,
+      "last_modified": "Tue, 04 Oct 2022 05:16:04 +0000"
+    }
+  },
+  "brands": 51,
+  "total_rows": 1086,
+  "per_brand_counts": {
+    "1IRONGOLF": 3,
+    "ADAMS GOLF": 19,
+    "BEN HOGAN": 20,
+    "BOCCIERI GOLF": 1,
+    "BRIDGESTONE GOLF": 7,
+    "BROWNING": 3,
+    "BURKE": 3,
+    "CALLAWAY": 110,
+    "CLEVELAND": 45,
+    "COBRA": 98,
+    "DYNACRAFT": 7,
+    "FOUNDERS CLUB": 2,
+    "GOLDWIN": 1,
+    "GOLFSMITH": 37,
+    "GOLFWORKS": 23,
+    "GRIFFITTS HENRY": 5,
+    "KZG": 2,
+    "LIQUIDMETAL": 1,
+    "LOPEZ": 1,
+    "LYNX": 7,
+    "MACGREGOR": 20,
+    "MAKSER": 1,
+    "MALTBY": 80,
+    "MAXFLI": 20,
+    "MISC": 5,
+    "MIURA": 2,
+    "MIZUNO": 92,
+    "NAKASHIMA": 1,
+    "NICKENT": 1,
+    "NICKLAUS": 3,
+    "NIKE": 37,
+    "ORLIMAR": 1,
+    "PEERLESS": 3,
+    "PING": 70,
+    "POWERBILT": 22,
+    "PRECEPT": 3,
+    "PXG": 15,
+    "RAM": 3,
+    "SPALDING": 16,
+    "SRIXON": 22,
+    "TAKOMO": 4,
+    "TAYLORMADE": 93,
+    "TITLEIST": 69,
+    "TOMMYARMOUR": 32,
+    "TOSKI": 6,
+    "TOUR EDGE": 6,
+    "TURNER": 1,
+    "WILSON": 43,
+    "WISHON": 16,
+    "XXIO": 1,
+    "YONEX": 3
+  },
+  "updated_at": "2026-07-13T16:41:47+00:00"
+}

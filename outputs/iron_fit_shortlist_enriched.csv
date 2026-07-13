@@ -1,0 +1,24 @@
+brand,model,year,mpf,tier,fit_score,loft_6i,moi,vcog_cg,head_weight_g,vs_gamer_moi,construction,family,consistency,note
+TAYLORMADE,P790 #6,2024,697,A,98.5,26.5,13.9213,0.774,262.4,2.38,Hollow forged + SpeedFoam Air + tungsten,Players Distance,Excellent,Same TM family as gamer; benchmark players-distance iron
+MIZUNO,JPX Hot Metal Pro #6,2023,696,A,98.0,24.0,14.2347,0.842,257.2,2.69,One-piece Chromoly,Players Distance,Excellent,Clean 'Pro' profile
+TITLEIST,T250* Launch Forged #6,2025,693,A,96.5,32.0,13.2028,0.759,253.5,1.66,Forged face + tungsten,Players Distance,Excellent,2025 T200 successor
+TITLEIST,T250 Forged #6,2025,690,A,95.0,27.5,13.4775,0.789,260.0,1.94,Forged face + tungsten,Players Distance,Excellent,2025 T200 successor
+MIZUNO,JPX 925 Hot Metal Pro #6,2025,713,A,93.5,26.0,13.9995,0.839,255.5,2.46,One-piece Chromoly 4335,Players Distance,Excellent,Renowned feel/consistency
+COBRA,Dark Speed #6,2024,713,A,93.5,24.0,11.9984,0.846,260.0,0.46,"Hollow, PWR-Bridge, tungsten",Players Distance,Very good,Aerojet successor
+MIZUNO,MX Speed Metal #6,2026,676,B,88.0,,,,,,,,,
+COBRA,King Tec-X Forged One Length #6,2025,724,A,88.0,25.0,11.8059,0.769,267.0,0.27,,,,
+TAYLORMADE,P790 Forged #6,2025,676,B,88.0,27.0,12.2859,0.828,255.8,0.75,Fully forged players distance,Players Distance,Excellent,Forged P790 variant
+CALLAWAY,Quantum Max #6,2026,728,A,86.0,25.5,13.8912,0.856,257.5,2.35,,,,
+MALTBY,TS1-IM Forged #6,2023,728,A,86.0,28.5,11.8759,0.831,260.5,0.34,,,,
+CALLAWAY,Paradym X #6,2023,672,B,86.0,23.0,14.0355,0.877,262.5,2.5,,,,
+CALLAWAY,Elyte #6,2025,730,A,85.0,25.0,12.3153,0.819,256.2,0.78,,,,
+PING,G430 #6,2023,731,A,84.5,25.5,18.2695,0.88,256.4,6.73,,,,
+CALLAWAY,Paradym #6,2023,656,B,78.0,26.0,12.6749,0.849,259.9,1.13,,,,
+PXG,0311 XP Gen 7 SX Forged #6,2025,650,B,75.0,23.0,15.5149,0.897,254.7,3.97,,,,
+TAYLORMADE,P770 Forged #6,2025,645,B,72.5,27.0,11.8526,0.795,247.7,0.31,Compact hollow forged + SpeedFoam Air,Players Distance (compact),Excellent,Gamer's newer sibling
+TITLEIST,T150 Forged #6,2025,641,B,70.5,28.5,14.1381,0.774,261.0,2.6,Forged face + tungsten (strong-loft players),Players / Players Distance,Very good,"Compact, low offset"
+MIZUNO,JPX 923 Forged #6,2023,637,B,68.5,27.0,13.669,0.828,255.5,2.13,Grain-flow forged HD Chromoly,Players Distance (forged),Very good,Softest feel
+PXG,Black Ops #6,2025,635,B,67.5,25.0,14.7257,0.857,251.6,3.19,,,,
+COBRA,King Tec-X Forged #6,2025,626,B,63.0,24.0,11.5032,0.768,260.0,-0.04,,,,
+TITLEIST,T100 Forged #6,2025,625,B,62.5,29.5,13.2923,0.771,260.0,1.75,,,,
+PXG,Gen 6 0311 P #6,2023,622,B,61.0,26.0,14.5012,0.881,257.3,2.96,"Hollow forged, XCOR2 core",Players Distance,Very good,Fully custom-fit brand

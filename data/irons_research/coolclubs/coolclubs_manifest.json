@@ -1,0 +1,67 @@
+{
+  "hashes": {
+    "callaway__Callaway-Quantum-Iron-Graph.png": "78ac70797c6e570409054609fd210a6ef192c684bf720f97c6675afa9edded9a",
+    "callaway__Callaway-Quantum-Iron-Key-Data.png": "64559a42f95b361688c182bd0fa70dcfb6d287c52afb5a23291970430089acf2",
+    "cc-compare__iron-tech-worth-3dscan.png": "11e8cf99281e92823dd72b0fae7a677e4707866bff65957fca9be839a3caa2fe",
+    "cc-compare__iron-tech-worth-graph.png": "8f877c6f3412025d6cc1b917895073ac4c7f2dc86fb3a45da51947c894dcc04d",
+    "cc-compare__iron-tech-worth-traj.png": "8e99504cac24e9beef55c6127eeb51f18f621df03478ac695e9a054de0ca1088",
+    "cc-compare__most-forgive-iron-scan.png": "6b60c794c5725c3373097f295e1f11fbbefe68e13e1297ae5169d93c4a8b6758",
+    "cc-compare__most-forgive-iron-traj.png": "082d5e6d57a72ae1767b61c54ed39c6f7a6e074296a4ea666e07af25543d5f3b",
+    "cc-compare__LS-Driver-Compare.png": "290f7a19ff85f63914d99bfc398a12453da246f85ec0a1955048dead5334bc58",
+    "cc-compare__Max-Driver-Compare.png": "5e224933f9587f75e51cb80f95bda7afb079f8bf8753684a3d06ca1a44a35efd",
+    "ping__ping-irons-graph.png": "606ece45f91f9da23b6da8554e39748ae6f42d52f6ca58d11f3b9f2c3771124a",
+    "ping__ping-irons-key-data.png": "d3bfb9f3ec8b3b0073acc26809547b90de4163739214b57b3371357ffebcf4aa",
+    "wilson__Wilson-Staff-Iron-Graph.png": "51a788e3d72e60acc43b42081747474ea751d52f7953a17608dfd51314b4af35",
+    "wilson__Wilson-Staff-Iron-Key-Data.png": "ab5e8e519d401e8b5e17e71723906d55beaea5dbdac786c8e2f3ea5ccd8f7a43",
+    "callaway__Callaway-Quantum-Graph.png": "c594ed98cc45d08bb81804b3ab0d3f34a8eb337285b1db3c1bff6e8f588240b0",
+    "cobra__Cobra-3DP-Graph.png": "8231d31c86ec8617657e7c49e1068d81fe940b7b9b5c2cb1924fdddc49751d7b",
+    "mizuno__Mizuno-M13-M15-Graph.png": "917137047ae13bc42282c8df3c45c7cea63b80c82d527f0bd994aacc5e005c25",
+    "ping__Ping-G440K-Graph.png": "ba563b3d6a30438163677ea31787609ab7da4a73f15859d77ee558a480daa10b",
+    "ping__Ping-G440K-Key-Data.png": "4146b032b6962fedff98f589080b3a4e0e46f42e5ec7126a980232d7433b42df",
+    "taylormade__Taylormade-QI-Graph.png": "abdc046de6bce4de0f25d5764a6e17b30c2066161f0f2f07b8656ed43c50b608",
+    "taylormade__Taylormade-Qi4D-Graphing.png": "bea2003bcc00a6cd1c8bcc622728901d8d5a62752847985c662b46c8814fc8ac",
+    "wilson__Wilson-DynaPWR-Forged-Graph.png": "be65a484a101b141d59f215d565f0bb33d64e21e810340df30667e852d2cc353",
+    "wilson__Wilson-DynaPWR-Forged-Key-Data.png": "1ca287dafca249d95c0a6c0fae1dcf2fdc1d5d109cbde593f57a5e8608800968"
+  },
+  "index": {
+    "callaway": [
+      "callaway__Callaway-Quantum-Graph.png",
+      "callaway__Callaway-Quantum-Iron-Graph.png",
+      "callaway__Callaway-Quantum-Iron-Key-Data.png"
+    ],
+    "cc-compare": [
+      "cc-compare__iron-tech-worth-3dscan.png",
+      "cc-compare__iron-tech-worth-graph.png",
+      "cc-compare__iron-tech-worth-traj.png",
+      "cc-compare__most-forgive-iron-scan.png",
+      "cc-compare__most-forgive-iron-traj.png"
+    ],
+    "cobra": [
+      "cobra__Cobra-3DP-Graph.png"
+    ],
+    "epon": [],
+    "mizuno": [
+      "mizuno__Mizuno-M13-M15-Graph.png"
+    ],
+    "ping": [
+      "ping__Ping-G440K-Graph.png",
+      "ping__Ping-G440K-Key-Data.png",
+      "ping__ping-irons-graph.png",
+      "ping__ping-irons-key-data.png"
+    ],
+    "pxg": [],
+    "srixon": [],
+    "taylormade": [
+      "taylormade__Taylormade-QI-Graph.png",
+      "taylormade__Taylormade-Qi4D-Graphing.png"
+    ],
+    "titleist": [],
+    "wilson": [
+      "wilson__Wilson-Staff-Iron-Graph.png",
+      "wilson__Wilson-Staff-Iron-Key-Data.png",
+      "wilson__Wilson-DynaPWR-Forged-Graph.png",
+      "wilson__Wilson-DynaPWR-Forged-Key-Data.png"
+    ]
+  },
+  "updated_at": "2026-07-13T17:08:43+00:00"
+}
