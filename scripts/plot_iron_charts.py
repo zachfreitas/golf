@@ -155,5 +155,49 @@ def spin_vs_moi():
     print("wrote outputs/charts/3_spin_vs_moi.png")
 
 
+# ================= Chart 4: actual VCOG vs MOI =================
+def actual_vcog_vs_moi():
+    s = pd.read_csv(D/"maltby_mpf_brand_specs.csv")
+    for c in ("vcog","moi","year"): s[c]=pd.to_numeric(s[c],errors="coerce")
+    cur = s[(s.year>=2024) & s.vcog.notna() & s.moi.notna()].copy()
+    favs = s[((s.brand=="CALLAWAY")&s.model.str.contains("X-20 Tour|X-22 Tour",na=False)) |
+             ((s.brand=="TAYLORMADE")&s.model.str.contains("P770 Forged",na=False)&(s.year==2023))].copy()
+    fig,ax=plt.subplots(figsize=(10,7.5))
+    ax.scatter(cur.vcog,cur.moi,s=46,c="#d9d8d2",alpha=0.75,edgecolor="none",zorder=1)
+    picks={"i240":"Ping i240","qi4dmaxhl":"TM Qi4D Max HL","staffdynapwr":"Wilson Staff Dynapwr",
+           "apextifusion":"Apex Ti Fusion","p790#6":"P790","i540":"Ping i540",
+           "ts35forged":"Maltby TS3.5","ts3dbmblack":"Maltby TS3 DBM","g740":"Ping G740"}
+    for _,r in cur.iterrows():
+        key=na(r.model)
+        for tok,nm in picks.items():
+            if tok in key:
+                col=CAT.get(r.category,MUTED)
+                ax.scatter(r.vcog,r.moi,s=95,c=col,edgecolor="white",lw=1.2,zorder=3)
+                label(ax,r.vcog,r.moi,nm,col); break
+    X22="#e87ba4"
+    for _,r in favs.iterrows():
+        if r.brand=="TAYLORMADE": col,nm,mk,sz=YOU,"YOU: P770 (gamer)","D",170
+        elif "X-20" in r.model: col,nm,mk,sz=FAV,"X-20 Tour (#1 fav)","*",440
+        else: col,nm,mk,sz=X22,"X-22 Tour (#3 fav)","*",440
+        ax.scatter(r.vcog,r.moi,s=sz,marker=mk,c=col,edgecolor="white",lw=1.4,zorder=5)
+        label(ax,r.vcog,r.moi,nm,col,dy=11)
+    # target zone: lower actual CG + higher MOI (upper-right after x-invert)
+    ax.axvspan(cur.vcog.min()-0.005,0.78,color="#1baf7a",alpha=0.05,zorder=0)
+    ax.axhline(13.5,color="#1baf7a",lw=1,ls="--",alpha=0.5,zorder=0)
+    ax.axvline(0.78,color="#1baf7a",lw=1,ls="--",alpha=0.5,zorder=0)
+    ax.invert_xaxis()  # lower actual VCOG (higher launch) to the RIGHT
+    style(ax,"Actual (Basic) VCOG vs MOI",
+          "Actual measured CG height vs forgiveness. Note: basic VCOG ignores loft — read with the CG map.",
+          "← higher CG (lower launch)     Actual VCOG (in)     lower CG (higher launch) →",
+          "MOI  →  more forgiving")
+    leg=[Line2D([0],[0],marker="D",color="w",markerfacecolor=YOU,markersize=10,label="Your P770 (gamer)"),
+         Line2D([0],[0],marker="*",color="w",markerfacecolor=FAV,markersize=15,label="X-20 Tour (#1 favorite)"),
+         Line2D([0],[0],marker="*",color="w",markerfacecolor="#e87ba4",markersize=15,label="X-22 Tour (#3 favorite)"),
+         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label="Other 2024+ irons")]
+    ax.legend(handles=leg,loc="lower left",frameon=False,fontsize=9)
+    fig.tight_layout(); fig.savefig(OUT/"4_actual_vcog_vs_moi.png",dpi=150); plt.close(fig)
+    print("wrote outputs/charts/4_actual_vcog_vs_moi.png")
+
+
 if __name__ == "__main__":
-    cg_map(); green_holding(); spin_vs_moi()
+    cg_map(); green_holding(); spin_vs_moi(); actual_vcog_vs_moi()
