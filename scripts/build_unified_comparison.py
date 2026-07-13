@@ -24,7 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / "data" / "irons_research"
 OUT = ROOT / "outputs" / "iron_unified_comparison.csv"
 
-BASE = dict(adj_vcog=-0.044, moi=11.54, loft=29.0)  # his P770 (2023), 6-iron ref
+# his P770 (2023), 6-iron ref. vcog_eff = Basic VCOG + Adjusted VCOG (0.788 + -0.044).
+BASE = dict(vcog_eff=0.744, moi=11.54, loft=29.0)
 
 # Shortlist: display name, brand, model match tokens (ALL must appear, alnum-only).
 SHORTLIST = [
@@ -62,7 +63,7 @@ def match(df, brand_col, model_col, brand, tokens, prefer_year=True, year_col=No
 
 def main() -> None:
     specs = pd.read_csv(D / "maltby_mpf_brand_specs.csv")
-    for c in ("loft", "moi", "adj_vcog", "year", "mpf"):
+    for c in ("loft", "moi", "adj_vcog", "vcog_eff", "year", "mpf"):
         specs[c] = pd.to_numeric(specs[c], errors="coerce")
     gd = pd.read_csv(D / "golfdigest_robot_2026.csv")
     cc = pd.read_csv(D / "coolclubs_iron_data.csv")
@@ -81,7 +82,7 @@ def main() -> None:
             # Maltby design levers
             "loft6i": sp.loft if sp is not None else "",
             "MOI": sp.moi if sp is not None else "",
-            "adjVCOG": sp.adj_vcog if sp is not None else "",
+            "effVCOG": sp.vcog_eff if sp is not None else "",
             "MPF": sp.mpf if sp is not None else "",
             # Golf Digest robot (82mph)
             "GD_spin": g.spin_rpm if g is not None else "",
@@ -105,7 +106,8 @@ def main() -> None:
 
     # Normalize design levers to his P770.
     df["dMOI_vsP770"] = pd.to_numeric(df.MOI, errors="coerce") - BASE["moi"]
-    df["dAdjVCOG_vsP770"] = pd.to_numeric(df.adjVCOG, errors="coerce") - BASE["adj_vcog"]
+    # negative = lower effective CG than your P770 = launches higher (what you want)
+    df["dEffVCOG_vsP770"] = (pd.to_numeric(df.effVCOG, errors="coerce") - BASE["vcog_eff"]).round(3)
     df["dLoft_vsP770"] = pd.to_numeric(df.loft6i, errors="coerce") - BASE["loft"]
 
     # Launch-fit for HIS deficit: reward GD spin + descent + peak (green-holding),
@@ -119,7 +121,7 @@ def main() -> None:
     # Inject his P770 GC3 baseline for reference (his swing ~75mph, not robot).
     base_row = {c: "" for c in df.columns}
     base_row.update({"iron": ">> YOUR P770 (GC3 @75mph, not robot)",
-                     "loft6i": 29, "MOI": 11.54, "adjVCOG": -0.044,
+                     "loft6i": 29, "MOI": 11.54, "effVCOG": 0.744,
                      "GD_spin": "4949*", "GD_descent": "39.5*", "GD_peak_ft": "61*",
                      "launch_fit": ""})
 
@@ -128,13 +130,14 @@ def main() -> None:
     df.to_csv(OUT, index=False)
     print(f"wrote {OUT.relative_to(ROOT)}\n")
 
-    view = ["iron","loft6i","MOI","adjVCOG","GD_spin","GD_descent","GD_peak_ft",
-            "MGS_ballspd","MGS_forgive","dMOI_vsP770","dAdjVCOG_vsP770","launch_fit"]
+    view = ["iron","loft6i","MOI","effVCOG","GD_spin","GD_descent","GD_peak_ft",
+            "MGS_ballspd","MGS_forgive","dMOI_vsP770","dEffVCOG_vsP770","launch_fit"]
     with pd.option_context("display.width", 220, "display.max_colwidth", 30):
         print(df[view].to_string(index=False))
     print("\n* = your GC3 numbers at ~75 mph (robot rows are 80-82 mph); compare rankings, not absolutes.")
-    print("Lower adjVCOG = launches higher for its loft; higher MOI = more forgiving;")
-    print("higher GD_spin/descent/peak = better green-holding (your deficit).")
+    print("effVCOG = Basic+Adjusted VCOG (lower = higher launch angle); higher MOI = more forgiving.")
+    print("NOTE: most high-spin picks reach green-holding via WEAKER LOFT -> more spin/descent,")
+    print("not via lower CG. Measured GD_spin/descent/peak is the green-holding ground truth.")
 
 
 if __name__ == "__main__":

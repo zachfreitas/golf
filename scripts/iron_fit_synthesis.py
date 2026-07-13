@@ -25,8 +25,8 @@ ROBOT = ROOT / "data" / "irons_research" / "golfdigest_robot_2026.csv"
 SPECS = ROOT / "data" / "irons_research" / "maltby_mpf_brand_specs.csv"
 OUT = ROOT / "outputs" / "iron_fit_for_launch.csv"
 
-# His P770 (2023) baseline.
-BASE_ADJVCOG, BASE_MOI, BASE_LOFT = -0.044, 11.54, 29.0
+# His P770 (2023) baseline. vcog_eff = Basic VCOG + Adjusted VCOG (0.788 + -0.044).
+BASE_VCOGEFF, BASE_MOI, BASE_LOFT = 0.744, 11.54, 29.0
 
 
 def norm(s: str) -> str:
@@ -35,7 +35,7 @@ def norm(s: str) -> str:
 
 def load_specs() -> pd.DataFrame:
     s = pd.read_csv(SPECS)
-    for c in ("loft", "moi", "vcog", "adj_vcog", "rcog", "year", "mpf"):
+    for c in ("loft", "moi", "vcog", "adj_vcog", "vcog_eff", "rcog", "year", "mpf"):
         s[c] = pd.to_numeric(s[c], errors="coerce")
     s = s[s.year >= 2025]
     return s
@@ -73,7 +73,7 @@ def main() -> None:
             "descent_deg": r.descent_deg, "peak_ft": r.peak_ft,
             "carry_yds": r.carry_yds, "dispersion_sqft95": r.dispersion_sqft95,
             "loft_6i": (sp.loft if sp is not None else ""),
-            "adj_vcog": (sp.adj_vcog if sp is not None else ""),
+            "vcog_eff": (sp.vcog_eff if sp is not None else ""),
             "moi": (sp.moi if sp is not None else ""),
         }
         recs.append(rec)
@@ -86,7 +86,7 @@ def main() -> None:
     df["green_hold_z"] = (z("spin_rpm") + z("descent_deg") + z("peak_ft")).round(2)
     # Forgiveness (where MOI known), normalized vs his P770.
     df["moi_vs_P770"] = pd.to_numeric(df["moi"], errors="coerce") - BASE_MOI
-    df["adjvcog_vs_P770"] = pd.to_numeric(df["adj_vcog"], errors="coerce") - BASE_ADJVCOG
+    df["effvcog_vs_P770"] = (pd.to_numeric(df["vcog_eff"], errors="coerce") - BASE_VCOGEFF).round(3)
     df["loft_vs_P770"] = pd.to_numeric(df["loft_6i"], errors="coerce") - BASE_LOFT
 
     # Combined fit: primarily green-holding, plus a forgiveness nudge where MOI is known.
@@ -95,7 +95,7 @@ def main() -> None:
 
     df = df.sort_values("launch_fit", ascending=False)
     cols = ["category","brand","model","iron_tested","spin_rpm","descent_deg","peak_ft",
-            "carry_yds","loft_6i","adj_vcog","moi","moi_vs_P770","adjvcog_vs_P770",
+            "carry_yds","loft_6i","vcog_eff","moi","moi_vs_P770","effvcog_vs_P770",
             "loft_vs_P770","green_hold_z","launch_fit"]
     df[cols].to_csv(OUT, index=False)
     print(f"wrote {len(df)} -> {OUT.relative_to(ROOT)}\n")
@@ -104,7 +104,7 @@ def main() -> None:
                         "moi","loft_6i","launch_fit"]]
     with pd.option_context("display.width",170,"display.max_colwidth",22):
         print(show.to_string(index=False))
-    print(f"\nHis P770 baseline: adj_vcog {BASE_ADJVCOG}, MOI {BASE_MOI}, 6i loft {BASE_LOFT}")
+    print(f"\nHis P770 baseline: effVCOG {BASE_VCOGEFF}, MOI {BASE_MOI}, 6i loft {BASE_LOFT}")
     print("His GC3 7i: spin ~4950 @75mph, descent 39.5deg, peak 61ft  (all below target)")
 
 

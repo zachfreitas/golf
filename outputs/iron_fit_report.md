@@ -123,31 +123,45 @@ deficit is entirely **spin, peak height, and descent angle** — your ball flies
 and won't stop on greens. Your AoA is descending and appropriate, so this is **not** a swing
 fault; it's the club's **CG/spin character.**
 
-**Do you need a different adjusted VCOG or MOI? Yes — here's the data:**
+**Do you need a different VCOG or MOI? Yes — here's the data:**
 
-The Maltby per-brand PDFs give the loft-normalized CG ("Adjusted VCOG"; lower = launches
-higher for the loft) and MOI for every head:
+The right CG figure is **Effective VCOG = Basic VCOG + Adjusted VCOG** (the "Adjusted"
+column is a loft correction you ADD to the basic measured VCOG — not used alone). Lower
+effective VCOG = launches higher. We also use **RCOG** (CG depth; deeper = more launch +
+MOI) — the third lever you flagged.
 
-| Iron | 6i loft | **adj VCOG** | **MOI** | RCOG (CG depth) |
-|---|---|---|---|---|
-| **X-20 Tour** (your #1 all-time) | 30° | **−0.148** (very low CG) | **13.71** | 0.753 (deep) |
-| **P770 (your gamer)** | 29° | **−0.044** | **11.54** | 0.516 |
+| Iron | 6i loft | Basic VCOG | + Adj | **= Effective VCOG** | **MOI** | **RCOG** (depth) |
+|---|---|---|---|---|---|---|
+| **X-20 Tour** (your #1 all-time) | 30° | 0.860 | −0.148 | **0.712** | **13.71** | **0.753** (deep) |
+| **P770 (your gamer)** | 29° | 0.788 | −0.044 | **0.744** | **11.54** | 0.516 |
 
-Your favorite iron ever had a **much lower CG-for-loft (−0.148 vs −0.044) and higher MOI
-(13.71 vs 11.54)** — a high-launch, forgiving design. You've been gaming an iron that sits
-lower on both levers, which is exactly why the ball flies low with little spin.
+Your favorite iron ever had a **lower effective VCOG (0.712 vs 0.744 → higher launch),
+higher MOI (13.71 vs 11.54), and a much deeper CG (RCOG 0.753 vs 0.516)** — a high-launch,
+forgiving design. Your P770 sits higher/shallower on all three, which is exactly why your
+ball flies low with little spin.
 
-**What to change:**
-1. **Lower adjusted VCOG** (deeper/lower CG) → raises launch, peak height and descent.
-2. **Higher MOI** → holds ball speed on misses (your consistency love).
+**What to change (target ≈ your X-20 Tour):**
+1. **Lower effective VCOG (≤ ~0.71)** → raises launch and peak height.
+2. **Deeper CG (higher RCOG) + higher MOI** → more launch, more forgiveness, holds ball
+   speed on misses (your consistency love).
 3. **Do NOT chase stronger lofts** → strong lofts kill spin, worsening green-holding. This
    is why low-spin players-distance irons (P790/i540) are the wrong tool for *you*.
 
-**On "normalizing to loft":** you were right to question it — and the good news is Maltby's
-**Adjusted VCOG already normalizes CG for loft**, so we don't need a home-brewed loft
-correction (which is unreliable given how differently modern lofts are set). The columns
-`adj_vcog`, `moi`, and their deltas vs your P770 are in `outputs/iron_fit_for_launch.csv`
-and `outputs/iron_fit_recommendations.csv`.
+**Important nuance:** effective VCOG predicts launch ANGLE, not SPIN — the P790 has the
+lowest effective VCOG (0.693) yet the lowest robot spin (4,911). So the full fix pairs a
+low effective VCOG with **measured robot spin/descent** (the green-holding half).
+
+**On "normalizing to loft":** you were right to question a home-brew — Maltby already bakes
+the loft correction into the Adjusted column, so **Effective = Basic + Adjusted** is the
+loft-correct CG. Columns `vcog_eff`, `rcog`, `moi` and deltas-vs-P770 are in
+`outputs/iron_unified_comparison.csv` and `outputs/iron_fit_for_launch.csv`.
+
+**Charts (`outputs/charts/`):**
+1. `1_cg_map.png` — Effective VCOG (launch) vs RCOG (depth), bubble = MOI; your P770,
+   X-20 Tour and X-22 Tour marked, target zone shaded.
+2. `2_green_holding.png` — robot spin vs descent angle; your P770 sits alone in the
+   low-spin/shallow corner.
+3. `3_spin_vs_moi.png` — spin vs MOI: your two needs on one plot, sweet spot upper-right.
 
 ---
 

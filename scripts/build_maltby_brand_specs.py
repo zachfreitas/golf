@@ -63,7 +63,7 @@ COLUMNS = [
     ("mpf",         591,   616, "num"),
     ("category",    616, 99999, "cat"),
 ]
-CSV_FIELDS = [c[0] for c in COLUMNS] + ["iron_number", "source_pdf"]
+CSV_FIELDS = [c[0] for c in COLUMNS] + ["vcog_eff", "iron_number", "source_pdf"]
 ROW_BAND = 18.0  # +/- points around a year anchor (row pitch is ~82pt, so safe)
 
 
@@ -174,6 +174,12 @@ def parse_brand_pdf(path: Path) -> list[dict]:
 
             if not rec.get("brand") or not rec.get("model"):
                 continue
+            # Effective VCOG = Basic VCOG + Adjusted VCOG (the loft correction). Lower =
+            # launches higher. This (not the adjustment alone) is the launch-relevant CG.
+            try:
+                rec["vcog_eff"] = round(float(rec["vcog"]) + float(rec["adj_vcog"]), 3)
+            except (ValueError, TypeError):
+                rec["vcog_eff"] = ""
             rec["iron_number"] = _iron_number(str(rec["model"]))
             rec["source_pdf"] = path.name
             out.append(rec)
