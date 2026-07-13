@@ -165,6 +165,61 @@ loft-correct CG. Columns `vcog_eff`, `rcog`, `moi` and deltas-vs-P770 are in
 
 ---
 
+## Delivery / compression diagnosis (added after robot + benchmark comparison)
+
+**This section partially revises the "it's the club's CG" emphasis above.** Robot data for
+the P770 itself, plus at-your-speed P790 benchmarks, show the head is capable — your bigger
+lever is **compression / strike quality.**
+
+**Your GC3 spin averages** (mishits pull the raw average down):
+
+| Club | avg spin (all shots) | avg spin (well-struck) |
+|---|---|---|
+| 7-iron | ~4,374 rpm (n=125) | ~4,993 rpm (n=67) |
+| 5-iron | ~2,354 rpm (n=28) | ~2,865 rpm (n=14) |
+
+**At your own ~76 mph, you vs. a well-struck iron:**
+
+| Metric | Well-struck (realistic) | You (GC3 P770) | gap |
+|---|---|---|---|
+| Ball speed | ~106–110 | **99** | −7 to −11 (the real problem) |
+| Smash | ~1.38–1.40 | **1.31** (7i) | low compression |
+| Launch | 16–18° | 18.8° | fine (slightly high) |
+| Spin (7i) | 4,800–5,200 | **4,949** | **in range for the loft** |
+| Peak | 26–30 yd | ~20 yd | low |
+| Descent | 44–46° | **39.5°** | won't hold |
+| Carry (7i) | ~145–150 | ~130 | −15 to −20 |
+
+**Root cause = compression / ball speed, not the club, shaft, spin, or AoA:**
+- At your *own* club speed a solid strike makes ~106–110 mph ball; you make **99**. That
+  smash gap (1.31 vs ~1.39) costs ~15–20 yd of carry **and** the height (20 yd apex vs
+  26–30) — and the low apex is what makes the descent shallow (39.5° vs 44–46°). One fix,
+  four benefits.
+- **Spin is not actually low** for your strong loft (4,949 ≈ the P790's ~4,900). The earlier
+  "low spin" flag used a traditional-loft window; corrected against your 33° P770, spin is
+  normal. The real deficits are **ball speed and peak height/descent.**
+- **AoA (~−4.7° on the 7i) is fine**; **shaft (MMT 75 S) is fine** — don't chase a
+  higher-launch shaft, your launch is already high.
+- **Proof the head is capable:** Cool Clubs robot P770 7-iron @80 mph = **158 yd**; a
+  low-spin P790 struck by a robot still descends **44–49°** vs your 39.5°. You can't blame
+  the club when a lower-spin iron out-descends yours.
+- **Pattern by club:** 5-iron smash is elite (1.40) but flight is low/low-spin; 7-iron smash
+  sags to 1.31 with a higher launch — i.e. you compress the long iron but **add loft / lose
+  compression in the mid-irons** (flip signature).
+
+**Note on benchmarks:** several AI-generated P790 profiles quoted smash 1.48–1.52 / ball
+119–121 at 76–80 mph — physically impossible (iron smash caps ~1.43). Those overstate the
+gap; the realistic well-struck targets are in the table above.
+
+**To confirm the mechanism (flip vs thin vs high-face):** none of the 10 GC3 sessions
+captured **dynamic loft** or **strike location** (all empty). Record a session with the GC3
+club/optical data enabled (dynamic loft) — high dynamic loft (>~22° on the 7i) = adding
+loft/flipping; a high face-strike would confirm gear-effect spin loss.
+
+**Bottom line:** compression/strike is the primary lever (≈15–20 yd + stopping power);
+equipment is secondary (a higher-spin forgiving head buys a few degrees of descent insurance
+while you fix the strike).
+
 ## The key insight (forgiveness lens)
 
 Your three favorite irons, scored on the Maltby Playability Factor (higher MPF = more
