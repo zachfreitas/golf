@@ -10,9 +10,14 @@ Each highlights his gamer (P770) and all-time favorite (X-20 Tour) and shades th
 Outputs: outputs/charts/*.png
 """
 from __future__ import annotations
+import argparse
 import re
 from pathlib import Path
 import pandas as pd
+
+# Year cutoff for the CG charts (1,4,5). The full dataset spans 1928-2026 (1086 irons);
+# default shows the modern field. Override with --since YYYY (or --since 0 for all).
+YEAR_MIN = 2020
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -54,7 +59,7 @@ def label(ax, x, y, txt, color=INK, dx=0, dy=8):
 def cg_map():
     s = pd.read_csv(D/"maltby_mpf_brand_specs.csv")
     for c in ("vcog_eff","rcog","moi","year"): s[c]=pd.to_numeric(s[c],errors="coerce")
-    cur = s[(s.year>=2024) & s.vcog_eff.notna() & s.rcog.notna() & s.moi.notna()].copy()
+    cur = s[(s.year>=YEAR_MIN) & s.vcog_eff.notna() & s.rcog.notna() & s.moi.notna()].copy()
     favs = s[((s.brand=="CALLAWAY")&s.model.str.contains("X-20 Tour|X-22 Tour",na=False)) |
              ((s.brand=="TAYLORMADE")&s.model.str.contains("P770 Forged",na=False)&(s.year==2023))].copy()
     fig,ax=plt.subplots(figsize=(10,7.5))
@@ -94,7 +99,7 @@ def cg_map():
     leg=[Line2D([0],[0],marker="D",color="w",markerfacecolor=YOU,markersize=10,label="Your P770 (gamer)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor=FAV,markersize=15,label="X-20 Tour (#1 favorite)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor="#e87ba4",markersize=15,label="X-22 Tour (#3 favorite)"),
-         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label="Other 2024+ irons")]
+         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label=f"Other {YEAR_MIN}+ irons")]
     ax.legend(handles=leg,loc="lower left",frameon=False,fontsize=9)
     fig.tight_layout(); fig.savefig(OUT/"1_cg_map.png",dpi=150); plt.close(fig)
     print("wrote outputs/charts/1_cg_map.png")
@@ -159,7 +164,7 @@ def spin_vs_moi():
 def actual_vcog_vs_moi():
     s = pd.read_csv(D/"maltby_mpf_brand_specs.csv")
     for c in ("vcog","moi","year"): s[c]=pd.to_numeric(s[c],errors="coerce")
-    cur = s[(s.year>=2024) & s.vcog.notna() & s.moi.notna()].copy()
+    cur = s[(s.year>=YEAR_MIN) & s.vcog.notna() & s.moi.notna()].copy()
     favs = s[((s.brand=="CALLAWAY")&s.model.str.contains("X-20 Tour|X-22 Tour",na=False)) |
              ((s.brand=="TAYLORMADE")&s.model.str.contains("P770 Forged",na=False)&(s.year==2023))].copy()
     fig,ax=plt.subplots(figsize=(10,7.5))
@@ -193,7 +198,7 @@ def actual_vcog_vs_moi():
     leg=[Line2D([0],[0],marker="D",color="w",markerfacecolor=YOU,markersize=10,label="Your P770 (gamer)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor=FAV,markersize=15,label="X-20 Tour (#1 favorite)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor="#e87ba4",markersize=15,label="X-22 Tour (#3 favorite)"),
-         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label="Other 2024+ irons")]
+         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label=f"Other {YEAR_MIN}+ irons")]
     ax.legend(handles=leg,loc="lower left",frameon=False,fontsize=9)
     fig.tight_layout(); fig.savefig(OUT/"4_actual_vcog_vs_moi.png",dpi=150); plt.close(fig)
     print("wrote outputs/charts/4_actual_vcog_vs_moi.png")
@@ -203,7 +208,7 @@ def actual_vcog_vs_moi():
 def eff_vcog_vs_moi():
     s = pd.read_csv(D/"maltby_mpf_brand_specs.csv")
     for c in ("vcog_eff","moi","year"): s[c]=pd.to_numeric(s[c],errors="coerce")
-    cur = s[(s.year>=2024) & s.vcog_eff.notna() & s.moi.notna()].copy()
+    cur = s[(s.year>=YEAR_MIN) & s.vcog_eff.notna() & s.moi.notna()].copy()
     favs = s[((s.brand=="CALLAWAY")&s.model.str.contains("X-20 Tour|X-22 Tour",na=False)) |
              ((s.brand=="TAYLORMADE")&s.model.str.contains("P770 Forged",na=False)&(s.year==2023))].copy()
     fig,ax=plt.subplots(figsize=(10,7.5))
@@ -237,11 +242,17 @@ def eff_vcog_vs_moi():
     leg=[Line2D([0],[0],marker="D",color="w",markerfacecolor=YOU,markersize=10,label="Your P770 (gamer)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor=FAV,markersize=15,label="X-20 Tour (#1 favorite)"),
          Line2D([0],[0],marker="*",color="w",markerfacecolor="#e87ba4",markersize=15,label="X-22 Tour (#3 favorite)"),
-         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label="Other 2024+ irons")]
+         Line2D([0],[0],marker="o",color="w",markerfacecolor="#d9d8d2",markersize=10,label=f"Other {YEAR_MIN}+ irons")]
     ax.legend(handles=leg,loc="lower left",frameon=False,fontsize=9)
     fig.tight_layout(); fig.savefig(OUT/"5_eff_vcog_vs_moi.png",dpi=150); plt.close(fig)
     print("wrote outputs/charts/5_eff_vcog_vs_moi.png")
 
 
 if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--since", type=int, default=YEAR_MIN,
+                    help="min model year for CG charts (0 = all 1928-2026)")
+    args = ap.parse_args()
+    YEAR_MIN = args.since
+    print(f"CG charts show irons with year >= {YEAR_MIN}")
     cg_map(); green_holding(); spin_vs_moi(); actual_vcog_vs_moi(); eff_vcog_vs_moi()
