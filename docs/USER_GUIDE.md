@@ -232,10 +232,12 @@ The Arccos app syncs the round to the cloud automatically. To pull it locally:
 
 ```bash
 cd ~/tools/golf-reports/ingest
-GOLF_STORE=~/golf-data GOLF_INCLUDE_GPS=1 python pull_arccos.py --include-gps
+GOLF_STORE=~/golf-data GOLF_INCLUDE_GPS=1 python pull_arccos.py --include-gps --n 500
 ```
 
-This re-fetches changed data, rebuilds the CSVs in `~/golf-data/`. Rate-limited
+This re-fetches changed data, rebuilds the CSVs in `~/golf-data/`. **Always pass
+`--n 500`** — the puller defaults to the 50 most recent rounds and silently drops
+older history from the built CSVs otherwise. Rate-limited
 (600s between syncs) — don't loop on it.
 
 Then in this repo:
@@ -531,7 +533,7 @@ the 9-iron entirely achieves the same end for $0.
 |---|---|---|
 | `FileNotFoundError: Arccos store not found at C:\Users\…\golf-data` | First sync never ran, or `GOLF_STORE` is set somewhere unexpected. | Re-run `python setup.py` in `~/tools/golf-reports`. |
 | `AttributeError: 'NoneType' object has no attribute 'get'` in `pull_arccos.py` | Upstream bug — `None` hole in your data. | Apply the two-line patch in [§4](#4-arccos-course-workflow) "Known upstream bugs". |
-| `~/golf-data/_cache_raw/` exists but no CSVs | Build step skipped or failed. | Run `cd ~/tools/golf-reports/ingest && GOLF_STORE=~/golf-data GOLF_INCLUDE_GPS=1 python pull_arccos.py --build --include-gps`. |
+| `~/golf-data/_cache_raw/` exists but no CSVs | Build step skipped or failed. | Run `cd ~/tools/golf-reports/ingest && GOLF_STORE=~/golf-data GOLF_INCLUDE_GPS=1 python pull_arccos.py --build --include-gps --n 500`. |
 | `scripts/forecast_club_distances.py` errors: "No paired bag found" | `_cache_raw/clubs_v6.json` missing — happens if the puller never finished a fetch phase. | Re-run the puller with both fetch and build (no flags = both). |
 | Per-club analysis shows clubs you no longer own (e.g. old 5-wood) | Reading raw `clubs.csv` instead of filtered `paired_bag`. | Use `data.shots_in_bag()` or `data.paired_bag`, not `data.clubs` or unfiltered `data.shots`. |
 | `Club 35` appears in shots.csv but not in your bag | Puller's `CLUBTYPE` map doesn't include clubType 35 — your 3-hybrid (Qi10 Rescue 19°) shows as the generic fallback "Club 35". | Already handled by `arccos/loader.py` — it surfaces `paired_bag.label = "3 Hybrid"` for display while keeping `shots_csv_label = "Club 35"` for shots.csv matching. |
@@ -555,7 +557,7 @@ the 9-iron entirely achieves the same end for $0.
 | What | When | Command |
 |---|---|---|
 | New GC3 session | Drop the CSV in the repo root, run the GC3 notebook | (none — notebook auto-discovers) |
-| New round played | Sync, regenerate notebook | `python pull_arccos.py --include-gps` then `python scripts/build_notebook.py && jupyter nbconvert --execute --inplace notebooks/Arccos_Course_Analysis.ipynb` |
+| New round played | Sync, regenerate notebook | `python pull_arccos.py --include-gps --n 500` then `python scripts/build_notebook.py && jupyter nbconvert --execute --inplace notebooks/Arccos_Course_Analysis.ipynb` |
 | New club added to bag | Add row to `data/bag_inventory.csv` (set `in_bag=1`), update `data/Book1.xlsx` for the cheat-sheet swing speed | `python generate_cheat_sheet.py && python forecast_club_distances.py` |
 | Bench a club / swap in an Out-of-Bag club | Flip `in_bag` flag in `data/bag_inventory.csv` (don't delete the row — keeps history); re-pair the sensor in the Arccos app | After next Arccos sync, `python scripts/forecast_club_distances.py` to see the new bag-spacing picture |
 | Measured driver / wood swing speed | Update the matching row in `data/bag_inventory.csv` (`swing_speed_mph` column) + `data/Book1.xlsx` for the cheat sheet | `python scripts/generate_cheat_sheet.py` |

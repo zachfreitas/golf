@@ -1,14 +1,14 @@
 Club,Make/Model,Smart Distance (yd),Longest (yd),Recent p80 (yd),n (last 12mo),Gap to next (yd)
-Driver,TaylorMade Qi10,217,253,212,87, 19  [WIDE]
-3 Wood,TaylorMade Qi10,198,225,194,25, 16
-3 Hybrid,TaylorMade Qi10,182,227,168,33, 15
-Hybrid,TaylorMade Qi10,166,188,156,20, 13
-5 Iron,TaylorMade P∙770,153,160,148,9, 12
-6 Iron,TaylorMade P∙770,141,170,140,21, 11
-7 Iron,TaylorMade P∙770,129,144,120,14,  4  [TIGHT]
-8 Iron,TaylorMade P∙770,124,136,117,20, 16
-9 Iron,TaylorMade P∙770,108,133,108,12,  0  [TIGHT]
-Pitching Wedge,TaylorMade P∙770,107,127,112,5, 24  [WIDE]
-Wedge,TaylorMade MG4,83,126,52,91, 17
-Wedge,TaylorMade MG4,65,96,52,91, 19  [WIDE]
-Wedge,TaylorMade MG4,46,93,52,91,
+Driver,TaylorMade Qi10,218,253,212,104, 18  [WIDE]
+3 Wood,TaylorMade Qi10,200,229,190,33, 19  [WIDE]
+3 Hybrid,TaylorMade Qi10,180,227,170,37, 16
+Hybrid,TaylorMade Qi10,164,188,160,22, 13
+5 Iron,TaylorMade P∙770,151,160,145,23, 10
+6 Iron,TaylorMade P∙770,140,158,139,24, 10
+7 Iron,TaylorMade P∙770,130,144,121,21,  6
+8 Iron,TaylorMade P∙770,123,136,116,21, 15
+9 Iron,TaylorMade P∙770,107,133,108,15,  5  [TIGHT]
+Pitching Wedge,TaylorMade P∙770,102,127,106,12, 18  [WIDE]
+Wedge,TaylorMade MG4,83,126,52,118, 17
+Wedge,TaylorMade MG4,65,96,52,118, 18  [WIDE]
+Wedge,TaylorMade MG4,46,93,52,118,
